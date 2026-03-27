@@ -6,7 +6,7 @@
 
 // =============================================
 // Tropicon2026 — ESP32-S3-WROOM-1-N8
-// Primera prueba: solo SX1262 + Bluetooth
+// Third test: SX1262 + AHT10 + SI4463
 // =============================================
 
 // UART
@@ -17,13 +17,13 @@
 #define SDA I2C_SDA
 #define SCL I2C_SCL
 
-// SPI por defecto (SPI0 — sin usar en esta prueba)
+// ── SPI Bus 0 — SX1262 LoRa ──────────────────────────────────────────────────
 #define SS    SX126X_CS
 #define MOSI  LORA_MOSI
 #define MISO  LORA_MISO
 #define SCK   LORA_SCK
 
-// LED integrado (ajusta si tu PCB tiene uno, o deja -1)
+// ── LED  — Integrated Led ───────────────────────────────────────────────────
 #define LED_BUILTIN  48
 
 #endif /* Pins_Arduino_h */

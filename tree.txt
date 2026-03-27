@@ -1,0 +1,1840 @@
+.
+├── alpine.Dockerfile
+├── bin
+│   ├── 99-meshtasticd-udev.rules
+│   ├── analyze_map.py
+│   ├── base64_to_hex.py
+│   ├── build-esp32.sh
+│   ├── build-firmware.sh
+│   ├── buildinfo.py
+│   ├── build-native.sh
+│   ├── build-nrf52.sh
+│   ├── build-rp2xx0.sh
+│   ├── build-stm32wl.sh
+│   ├── build-userprefs-json.py
+│   ├── bump_metainfo
+│   │   ├── bump_metainfo.py
+│   │   └── requirements.txt
+│   ├── bump_version.py
+│   ├── check-all.sh
+│   ├── check-dependencies.sh
+│   ├── config.d
+│   │   ├── display-waveshare-1-44.yaml
+│   │   ├── display-waveshare-2.8.yaml
+│   │   ├── femtofox
+│   │   │   ├── femtofox_LR1121_TCXO.yaml
+│   │   │   ├── femtofox_SX1262_TCXO.yaml
+│   │   │   └── femtofox_SX1262_XTAL.yaml
+│   │   ├── lora-Adafruit-RFM9x.yaml
+│   │   ├── lora-hat-rak-6421-pi-hat.yaml
+│   │   ├── lora-lyra-picocalc-wio-sx1262.yaml
+│   │   ├── lora-lyra-ultra_1w.yaml
+│   │   ├── lora-lyra-ultra_2w.yaml
+│   │   ├── lora-lyra-ws-raspberry-pi-pico-hat.yaml
+│   │   ├── lora-MeshAdv-900M30S.yaml
+│   │   ├── lora-MeshAdv-Mini-900M22S.yaml
+│   │   ├── lora-meshstick-1262.yaml
+│   │   ├── lora-piggystick-lr1121.yaml
+│   │   ├── lora-pinedio-usb-sx1262.yaml
+│   │   ├── lora-RAK6421-13300-slot1.yaml
+│   │   ├── lora-RAK6421-13300-slot2.yaml
+│   │   ├── lora-RAK6421-13302-slot1.yaml
+│   │   ├── lora-RAK6421-13302-slot2.yaml
+│   │   ├── lora-raxda-rock2f-starter-edition-hat.yaml
+│   │   ├── lora-starter-edition-sx1262-i2c.yaml
+│   │   ├── lora-usb-meshstick-1262.yaml
+│   │   ├── lora-usb-meshtoad-e22.yaml
+│   │   ├── lora-usb-umesh-1262-30dbm.yaml
+│   │   ├── lora-usb-umesh-1268-30dbm.yaml
+│   │   ├── lora-waveshare-sxxx.yaml
+│   │   ├── lora-ws-raspberry-pico-to-orangepi-03.yaml
+│   │   ├── lora-ws-raspberry-pi-pico-to-rpi-adapter.yaml
+│   │   ├── MUI
+│   │   │   └── X11_480x480.yaml
+│   │   └── OpenWRT
+│   │       ├── BananaPi-BPI-R4-sx1262.yaml
+│   │       ├── OpenWRT-One-mikroBUS-LR-IOT-CLICK.yaml
+│   │       └── OpenWRT_One_mikroBUS_sx1262.yaml
+│   ├── config-dist.yaml
+│   ├── device-install.bat
+│   ├── device-install.sh
+│   ├── device-install_test.ps1
+│   ├── device-update.bat
+│   ├── device-update.sh
+│   ├── dump-ram-users.sh
+│   ├── exception_decoder.py
+│   ├── generate_ci_matrix.py
+│   ├── generate_release_notes.py
+│   ├── generic
+│   │   ├── Meshtastic_6.1.0_bootloader-0.9.2_s140_6.1.1.hex
+│   │   ├── Meshtastic_6.1.0_bootloader-0.9.2_s140_6.1.1.zip
+│   │   ├── Meshtastic_7.3.0_bootloader-0.9.2_s140_7.3.0.hex
+│   │   ├── Meshtastic_7.3.0_bootloader-0.9.2_s140_7.3.0.zip
+│   │   ├── update-Meshtastic_6.1.0_bootloader-0.9.2_nosd.uf2
+│   │   └── update-Meshtastic_7.3.0_bootloader-0.9.2_nosd.uf2
+│   ├── gen-images.sh
+│   ├── genpartitions.py
+│   ├── kill-github-actions.sh
+│   ├── lilygo_techo_bootloader-0.6.1.zip
+│   ├── mergehex
+│   ├── meshtasticd.service
+│   ├── meshtasticd-start.sh
+│   ├── Meshtastic_nRF52_factory_erase_v3_S140_6.1.0.uf2
+│   ├── Meshtastic_nRF52_factory_erase_v3_S140_7.3.0.uf2
+│   ├── native-gdbserver.sh
+│   ├── native-install.sh
+│   ├── native-run.sh
+│   ├── org.meshtastic.meshtasticd.desktop
+│   ├── org.meshtastic.meshtasticd.metainfo.xml
+│   ├── org.meshtastic.meshtasticd.svg
+│   ├── platformio-custom.py
+│   ├── platformio-pre.py
+│   ├── promote-release.sh
+│   ├── __pycache__
+│   │   └── readprops.cpython-312.pyc
+│   ├── readprops.py
+│   ├── read-system-info.sh
+│   ├── regen-protos.bat
+│   ├── regen-protos.sh
+│   ├── rpkg.macros
+│   ├── s140_nrf52_7.3.0_softdevice.hex
+│   ├── setup-python-for-esp-debug.sh
+│   ├── shame.py
+│   ├── test-native-docker.sh
+│   ├── test-simulator.sh
+│   ├── uf2-convert.bat
+│   ├── uf2conv.py
+│   ├── update-lilygo_techo_bootloader-0.6.1_nosd.uf2
+│   ├── view-map.sh
+│   ├── web.version
+│   └── wio_tracker_bootloader_update.bin
+├── boards
+│   ├── bpi_picow_esp32_s3.json
+│   ├── canaryone.json
+│   ├── CDEBYTE_EoRa-Hub.json
+│   ├── CDEBYTE_EoRa-S3.json
+│   ├── crowpanel.json
+│   ├── eink0.1.json
+│   ├── esp32-s3-pico.json
+│   ├── ESP32-S3-WROOM-1-N4.json
+│   ├── esp32-s3-zero.json
+│   ├── gat562_mesh_trial_tracker.json
+│   ├── hackaday-communicator.json
+│   ├── heltec_mesh_node_t114.json
+│   ├── heltec_mesh_pocket.json
+│   ├── heltec_mesh_solar.json
+│   ├── heltec_v4.json
+│   ├── heltec_vision_master_e213.json
+│   ├── heltec_vision_master_e290.json
+│   ├── heltec_vision_master_t190.json
+│   ├── heltec_wireless_tracker.json
+│   ├── heltec_wireless_tracker_v2.json
+│   ├── icarus.json
+│   ├── me25ls01-4y10td.json
+│   ├── meshlink.json
+│   ├── mesh-tab.json
+│   ├── meshtiny.json
+│   ├── mini-epaper-s3.json
+│   ├── minimesh_lite.json
+│   ├── ms24sf1.json
+│   ├── muzi-base.json
+│   ├── my_esp32s3_diy_eink.json
+│   ├── my-esp32s3-diy-oled.json
+│   ├── nano-g2-ultra.json
+│   ├── nordic_pca10059.json
+│   ├── nrf52840_dk.json
+│   ├── promicro-nrf52840.json
+│   ├── r1-neo.json
+│   ├── seeed-sensecap-indicator.json
+│   ├── seeed_solar_node.json
+│   ├── seeed_wio_tracker_L1.json
+│   ├── seeed_xiao_nrf52840_kit.json
+│   ├── seeed-xiao-s3.json
+│   ├── station-g2.json
+│   ├── t-beam-1w.json
+│   ├── tbeam-s3-core.json
+│   ├── t-deck.json
+│   ├── t-deck-pro.json
+│   ├── t-echo.json
+│   ├── ThinkNode-M1.json
+│   ├── ThinkNode-M3.json
+│   ├── ThinkNode-M4.json
+│   ├── ThinkNode-M6.json
+│   ├── tlora-t3s3-v1.json
+│   ├── tracker-t1000-e.json
+│   ├── t-watch-s3.json
+│   ├── unphone.json
+│   ├── wio-sdk-wm1110.json
+│   ├── wio-t1000-s.json
+│   ├── wio-tracker-wm1110.json
+│   ├── wiphone.json
+│   ├── wiscore_rak11200.json
+│   ├── wiscore_rak3172.json
+│   ├── wiscore_rak3312.json
+│   ├── wiscore_rak4600.json
+│   ├── wiscore_rak4631.json
+│   └── xiao_ble_sense.json
+├── branding
+│   └── README.md
+├── CODE_OF_CONDUCT.md
+├── ContextoGeneral.md
+├── CONTRIBUTING.md
+├── data
+│   └── static
+├── debian
+│   ├── changelog
+│   ├── ci_changelog.sh
+│   ├── ci_pack_sdeb.sh
+│   ├── control
+│   ├── meshtasticd.dirs
+│   ├── meshtasticd.install
+│   ├── meshtasticd.postinst
+│   ├── meshtasticd.postrm
+│   ├── meshtasticd.udev
+│   ├── rules
+│   └── source
+│       ├── format
+│       ├── include-binaries
+│       └── options
+├── docker-compose.yml
+├── Dockerfile
+├── Dockerfile.test
+├── extra_scripts
+│   ├── disable_adafruit_usb.py
+│   ├── esp32_extra.py
+│   ├── esp32_pre.py
+│   ├── nrf52_extra.py
+│   ├── README.md
+│   └── stm32_extra.py
+├── flake.lock
+├── flake.nix
+├── images
+│   ├── compass.png
+│   ├── face-24px.svg
+│   ├── face.png
+│   ├── location_searching-24px.svg
+│   ├── pin.png
+│   ├── room-24px.svg
+│   └── textsms-24px.svg
+├── LICENSE
+├── meshtasticd.spec.rpkg
+├── meshtestic
+├── monitor
+│   ├── filter_c3_exception_decoder.py
+│   └── __pycache__
+│       └── filter_c3_exception_decoder.cpython-312.pyc
+├── partition-table-8MB.csv
+├── partition-table.csv
+├── platformio.ini
+├── protobufs
+├── pyocd.yaml
+├── README.md
+├── release
+├── renovate.json
+├── rpkg.conf
+├── SECURITY.md
+├── shell.nix
+├── src
+│   ├── airtime.cpp
+│   ├── airtime.h
+│   ├── AmbientLightingThread.h
+│   ├── AudioThread.h
+│   ├── BluetoothCommon.cpp
+│   ├── BluetoothCommon.h
+│   ├── BluetoothStatus.h
+│   ├── buzz
+│   │   ├── buzz.cpp
+│   │   ├── BuzzerFeedbackThread.cpp
+│   │   ├── BuzzerFeedbackThread.h
+│   │   └── buzz.h
+│   ├── commands.h
+│   ├── concurrency
+│   │   ├── BinarySemaphoreFreeRTOS.cpp
+│   │   ├── BinarySemaphoreFreeRTOS.h
+│   │   ├── BinarySemaphorePosix.cpp
+│   │   ├── BinarySemaphorePosix.h
+│   │   ├── InterruptableDelay.cpp
+│   │   ├── InterruptableDelay.h
+│   │   ├── Lock.cpp
+│   │   ├── LockGuard.cpp
+│   │   ├── LockGuard.h
+│   │   ├── Lock.h
+│   │   ├── NotifiedWorkerThread.cpp
+│   │   ├── NotifiedWorkerThread.h
+│   │   ├── OSThread.cpp
+│   │   ├── OSThread.h
+│   │   └── Periodic.h
+│   ├── configuration.h
+│   ├── DebugConfiguration.cpp
+│   ├── DebugConfiguration.h
+│   ├── detect
+│   │   ├── einkScan.h
+│   │   ├── LoRaRadioType.h
+│   │   ├── reClockI2C.cpp
+│   │   ├── reClockI2C.h
+│   │   ├── ScanI2CConsumer.cpp
+│   │   ├── ScanI2CConsumer.h
+│   │   ├── ScanI2C.cpp
+│   │   ├── ScanI2C.h
+│   │   ├── ScanI2CTwoWire.cpp
+│   │   └── ScanI2CTwoWire.h
+│   ├── DisplayFormatters.cpp
+│   ├── DisplayFormatters.h
+│   ├── error.h
+│   ├── freertosinc.h
+│   ├── FSCommon.cpp
+│   ├── FSCommon.h
+│   ├── Fusion
+│   │   ├── FusionAhrs.c
+│   │   ├── FusionAhrs.h
+│   │   ├── FusionAxes.h
+│   │   ├── FusionCalibration.h
+│   │   ├── FusionCompass.c
+│   │   ├── FusionCompass.h
+│   │   ├── FusionConvention.h
+│   │   ├── Fusion.h
+│   │   ├── FusionMath.h
+│   │   ├── FusionOffset.c
+│   │   └── FusionOffset.h
+│   ├── GpioLogic.cpp
+│   ├── GpioLogic.h
+│   ├── gps
+│   │   ├── cas.h
+│   │   ├── GeoCoord.cpp
+│   │   ├── GeoCoord.h
+│   │   ├── GPS.cpp
+│   │   ├── GPS.h
+│   │   ├── GPSUpdateScheduling.cpp
+│   │   ├── GPSUpdateScheduling.h
+│   │   ├── NMEAWPL.cpp
+│   │   ├── NMEAWPL.h
+│   │   ├── RTC.cpp
+│   │   ├── RTC.h
+│   │   └── ubx.h
+│   ├── GPSStatus.h
+│   ├── graphics
+│   │   ├── draw
+│   │   │   ├── ClockRenderer.cpp
+│   │   │   ├── ClockRenderer.h
+│   │   │   ├── CompassRenderer.cpp
+│   │   │   ├── CompassRenderer.h
+│   │   │   ├── DebugRenderer.cpp
+│   │   │   ├── DebugRenderer.h
+│   │   │   ├── DrawRenderers.h
+│   │   │   ├── MenuHandler.cpp
+│   │   │   ├── MenuHandler.h
+│   │   │   ├── MessageRenderer.cpp
+│   │   │   ├── MessageRenderer.h
+│   │   │   ├── NodeListRenderer.cpp
+│   │   │   ├── NodeListRenderer.h
+│   │   │   ├── NotificationRenderer.cpp
+│   │   │   ├── NotificationRenderer.h
+│   │   │   ├── UIRenderer.cpp
+│   │   │   └── UIRenderer.h
+│   │   ├── EInkDisplay2.cpp
+│   │   ├── EInkDisplay2.h
+│   │   ├── EInkDynamicDisplay.cpp
+│   │   ├── EInkDynamicDisplay.h
+│   │   ├── EmoteRenderer.cpp
+│   │   ├── EmoteRenderer.h
+│   │   ├── emotes.cpp
+│   │   ├── emotes.h
+│   │   ├── fonts
+│   │   │   ├── EinkDisplayFonts.cpp
+│   │   │   ├── EinkDisplayFonts.h
+│   │   │   ├── OLEDDisplayFontsCS.cpp
+│   │   │   ├── OLEDDisplayFontsCS.h
+│   │   │   ├── OLEDDisplayFontsGR.cpp
+│   │   │   ├── OLEDDisplayFontsGR.h
+│   │   │   ├── OLEDDisplayFontsPL.cpp
+│   │   │   ├── OLEDDisplayFontsPL.h
+│   │   │   ├── OLEDDisplayFontsRU.cpp
+│   │   │   ├── OLEDDisplayFontsRU.h
+│   │   │   ├── OLEDDisplayFontsUA.cpp
+│   │   │   └── OLEDDisplayFontsUA.h
+│   │   ├── GxEPD2Multi.h
+│   │   ├── images.h
+│   │   ├── img
+│   │   │   ├── icon_small.xbm
+│   │   │   └── icon.xbm
+│   │   ├── niche
+│   │   │   ├── Drivers
+│   │   │   │   ├── Backlight
+│   │   │   │   │   ├── LatchingBacklight.cpp
+│   │   │   │   │   └── LatchingBacklight.h
+│   │   │   │   ├── EInk
+│   │   │   │   │   ├── DEPG0213BNS800.cpp
+│   │   │   │   │   ├── DEPG0213BNS800.h
+│   │   │   │   │   ├── DEPG0290BNS800.cpp
+│   │   │   │   │   ├── DEPG0290BNS800.h
+│   │   │   │   │   ├── E0213A367.cpp
+│   │   │   │   │   ├── E0213A367.h
+│   │   │   │   │   ├── EInk.cpp
+│   │   │   │   │   ├── EInk.h
+│   │   │   │   │   ├── GDEW0102T4.cpp
+│   │   │   │   │   ├── GDEW0102T4.h
+│   │   │   │   │   ├── GDEY0154D67.cpp
+│   │   │   │   │   ├── GDEY0154D67.h
+│   │   │   │   │   ├── GDEY0213B74.cpp
+│   │   │   │   │   ├── GDEY0213B74.h
+│   │   │   │   │   ├── HINK_E0213A289.cpp
+│   │   │   │   │   ├── HINK_E0213A289.h
+│   │   │   │   │   ├── HINK_E042A87.cpp
+│   │   │   │   │   ├── HINK_E042A87.h
+│   │   │   │   │   ├── LCMEN2R13ECC1.cpp
+│   │   │   │   │   ├── LCMEN2R13ECC1.h
+│   │   │   │   │   ├── LCMEN2R13EFC1.cpp
+│   │   │   │   │   ├── LCMEN2R13EFC1.h
+│   │   │   │   │   ├── README.md
+│   │   │   │   │   ├── SSD1682.cpp
+│   │   │   │   │   ├── SSD1682.h
+│   │   │   │   │   ├── SSD16XX.cpp
+│   │   │   │   │   ├── SSD16XX.h
+│   │   │   │   │   ├── UC8175.cpp
+│   │   │   │   │   ├── UC8175.h
+│   │   │   │   │   ├── ZJY122250_0213BAAMFGN.cpp
+│   │   │   │   │   ├── ZJY122250_0213BAAMFGN.h
+│   │   │   │   │   ├── ZJY128296_029EAAMFGN.cpp
+│   │   │   │   │   ├── ZJY128296_029EAAMFGN.h
+│   │   │   │   │   └── ZJY200200_0154DAAMFGN.h
+│   │   │   │   └── README.md
+│   │   │   ├── Fonts
+│   │   │   │   ├── FreeSans12pt_Win1250.h
+│   │   │   │   ├── FreeSans12pt_Win1251.h
+│   │   │   │   ├── FreeSans12pt_Win1252.h
+│   │   │   │   ├── FreeSans12pt_Win1253.h
+│   │   │   │   ├── FreeSans6pt7b.h
+│   │   │   │   ├── FreeSans6pt_Win1250.h
+│   │   │   │   ├── FreeSans6pt_Win1251.h
+│   │   │   │   ├── FreeSans6pt_Win1252.h
+│   │   │   │   ├── FreeSans6pt_Win1253.h
+│   │   │   │   ├── FreeSans9pt_Win1250.h
+│   │   │   │   ├── FreeSans9pt_Win1251.h
+│   │   │   │   ├── FreeSans9pt_Win1252.h
+│   │   │   │   ├── FreeSans9pt_Win1253.h
+│   │   │   │   └── README.md
+│   │   │   ├── InkHUD
+│   │   │   │   ├── Applet.cpp
+│   │   │   │   ├── AppletFont.cpp
+│   │   │   │   ├── AppletFont.h
+│   │   │   │   ├── Applet.h
+│   │   │   │   ├── Applets
+│   │   │   │   │   ├── Bases
+│   │   │   │   │   │   ├── Map
+│   │   │   │   │   │   │   ├── MapApplet.cpp
+│   │   │   │   │   │   │   └── MapApplet.h
+│   │   │   │   │   │   └── NodeList
+│   │   │   │   │   │       ├── NodeListApplet.cpp
+│   │   │   │   │   │       └── NodeListApplet.h
+│   │   │   │   │   ├── Examples
+│   │   │   │   │   │   ├── BasicExample
+│   │   │   │   │   │   │   ├── BasicExampleApplet.cpp
+│   │   │   │   │   │   │   └── BasicExampleApplet.h
+│   │   │   │   │   │   ├── NewMsgExample
+│   │   │   │   │   │   │   ├── NewMsgExampleApplet.cpp
+│   │   │   │   │   │   │   └── NewMsgExampleApplet.h
+│   │   │   │   │   │   └── UserAppletInputExample
+│   │   │   │   │   │       ├── UserAppletInputExample.cpp
+│   │   │   │   │   │       └── UserAppletInputExample.h
+│   │   │   │   │   ├── System
+│   │   │   │   │   │   ├── AlignStick
+│   │   │   │   │   │   │   ├── AlignStickApplet.cpp
+│   │   │   │   │   │   │   └── AlignStickApplet.h
+│   │   │   │   │   │   ├── BatteryIcon
+│   │   │   │   │   │   │   ├── BatteryIconApplet.cpp
+│   │   │   │   │   │   │   └── BatteryIconApplet.h
+│   │   │   │   │   │   ├── Keyboard
+│   │   │   │   │   │   │   ├── KeyboardApplet.cpp
+│   │   │   │   │   │   │   └── KeyboardApplet.h
+│   │   │   │   │   │   ├── Logo
+│   │   │   │   │   │   │   ├── LogoApplet.cpp
+│   │   │   │   │   │   │   └── LogoApplet.h
+│   │   │   │   │   │   ├── Menu
+│   │   │   │   │   │   │   ├── MenuAction.h
+│   │   │   │   │   │   │   ├── MenuApplet.cpp
+│   │   │   │   │   │   │   ├── MenuApplet.h
+│   │   │   │   │   │   │   ├── MenuItem.h
+│   │   │   │   │   │   │   └── MenuPage.h
+│   │   │   │   │   │   ├── Notification
+│   │   │   │   │   │   │   ├── NotificationApplet.cpp
+│   │   │   │   │   │   │   ├── NotificationApplet.h
+│   │   │   │   │   │   │   └── Notification.h
+│   │   │   │   │   │   ├── Pairing
+│   │   │   │   │   │   │   ├── PairingApplet.cpp
+│   │   │   │   │   │   │   └── PairingApplet.h
+│   │   │   │   │   │   ├── Placeholder
+│   │   │   │   │   │   │   ├── PlaceholderApplet.cpp
+│   │   │   │   │   │   │   └── PlaceholderApplet.h
+│   │   │   │   │   │   └── Tips
+│   │   │   │   │   │       ├── TipsApplet.cpp
+│   │   │   │   │   │       └── TipsApplet.h
+│   │   │   │   │   └── User
+│   │   │   │   │       ├── AllMessage
+│   │   │   │   │       │   ├── AllMessageApplet.cpp
+│   │   │   │   │       │   └── AllMessageApplet.h
+│   │   │   │   │       ├── DM
+│   │   │   │   │       │   ├── DMApplet.cpp
+│   │   │   │   │       │   └── DMApplet.h
+│   │   │   │   │       ├── FavoritesMap
+│   │   │   │   │       │   ├── FavoritesMapApplet.cpp
+│   │   │   │   │       │   └── FavoritesMapApplet.h
+│   │   │   │   │       ├── Heard
+│   │   │   │   │       │   ├── HeardApplet.cpp
+│   │   │   │   │       │   └── HeardApplet.h
+│   │   │   │   │       ├── Positions
+│   │   │   │   │       │   ├── PositionsApplet.cpp
+│   │   │   │   │       │   └── PositionsApplet.h
+│   │   │   │   │       ├── RecentsList
+│   │   │   │   │       │   ├── RecentsListApplet.cpp
+│   │   │   │   │       │   └── RecentsListApplet.h
+│   │   │   │   │       └── ThreadedMessage
+│   │   │   │   │           ├── ThreadedMessageApplet.cpp
+│   │   │   │   │           └── ThreadedMessageApplet.h
+│   │   │   │   ├── DisplayHealth.cpp
+│   │   │   │   ├── DisplayHealth.h
+│   │   │   │   ├── docs
+│   │   │   │   │   ├── appletfont.png
+│   │   │   │   │   ├── disclaimer.jpg
+│   │   │   │   │   ├── README.md
+│   │   │   │   │   ├── rendering.gif
+│   │   │   │   │   └── tile_translation.png
+│   │   │   │   ├── Events.cpp
+│   │   │   │   ├── Events.h
+│   │   │   │   ├── InkHUD.cpp
+│   │   │   │   ├── InkHUD.h
+│   │   │   │   ├── MessageStore.cpp
+│   │   │   │   ├── MessageStore.h
+│   │   │   │   ├── Persistence.cpp
+│   │   │   │   ├── Persistence.h
+│   │   │   │   ├── PlatformioConfig.ini
+│   │   │   │   ├── Renderer.cpp
+│   │   │   │   ├── Renderer.h
+│   │   │   │   ├── SystemApplet.h
+│   │   │   │   ├── Tile.cpp
+│   │   │   │   ├── Tile.h
+│   │   │   │   ├── WindowManager.cpp
+│   │   │   │   └── WindowManager.h
+│   │   │   ├── Inputs
+│   │   │   │   ├── README.md
+│   │   │   │   ├── TwoButton.cpp
+│   │   │   │   ├── TwoButtonExtended.cpp
+│   │   │   │   ├── TwoButtonExtended.h
+│   │   │   │   └── TwoButton.h
+│   │   │   ├── README.md
+│   │   │   └── Utils
+│   │   │       ├── CannedMessageStore.cpp
+│   │   │       ├── CannedMessageStore.h
+│   │   │       └── FlashData.h
+│   │   ├── NomadStarLED.h
+│   │   ├── Panel_sdl.cpp
+│   │   ├── Panel_sdl.hpp
+│   │   ├── PointStruct.h
+│   │   ├── Screen.cpp
+│   │   ├── ScreenFonts.h
+│   │   ├── ScreenGlobals.cpp
+│   │   ├── Screen.h
+│   │   ├── SharedUIDisplay.cpp
+│   │   ├── SharedUIDisplay.h
+│   │   ├── TFTDisplay.cpp
+│   │   ├── TFTDisplay.h
+│   │   ├── tftSetup.cpp
+│   │   ├── TimeFormatters.cpp
+│   │   ├── TimeFormatters.h
+│   │   ├── VirtualKeyboard.cpp
+│   │   └── VirtualKeyboard.h
+│   ├── input
+│   │   ├── BBQ10Keyboard.cpp
+│   │   ├── BBQ10Keyboard.h
+│   │   ├── ButtonThread.cpp
+│   │   ├── ButtonThread.h
+│   │   ├── cardKbI2cImpl.cpp
+│   │   ├── cardKbI2cImpl.h
+│   │   ├── CardputerKeyboard.cpp
+│   │   ├── CardputerKeyboard.h
+│   │   ├── ExpressLRSFiveWay.cpp
+│   │   ├── ExpressLRSFiveWay.h
+│   │   ├── HackadayCommunicatorKeyboard.cpp
+│   │   ├── HackadayCommunicatorKeyboard.h
+│   │   ├── i2cButton.cpp
+│   │   ├── i2cButton.h
+│   │   ├── InputBroker.cpp
+│   │   ├── InputBroker.h
+│   │   ├── kbI2cBase.cpp
+│   │   ├── kbI2cBase.h
+│   │   ├── kbMatrixBase.cpp
+│   │   ├── kbMatrixBase.h
+│   │   ├── kbMatrixImpl.cpp
+│   │   ├── kbMatrixImpl.h
+│   │   ├── LinuxInput.cpp
+│   │   ├── LinuxInput.h
+│   │   ├── LinuxInputImpl.cpp
+│   │   ├── LinuxInputImpl.h
+│   │   ├── MPR121Keyboard.cpp
+│   │   ├── MPR121Keyboard.h
+│   │   ├── RotaryEncoderImpl.cpp
+│   │   ├── RotaryEncoderImpl.h
+│   │   ├── RotaryEncoderInterruptBase.cpp
+│   │   ├── RotaryEncoderInterruptBase.h
+│   │   ├── RotaryEncoderInterruptImpl1.cpp
+│   │   ├── RotaryEncoderInterruptImpl1.h
+│   │   ├── SeesawRotary.cpp
+│   │   ├── SeesawRotary.h
+│   │   ├── SerialKeyboard.cpp
+│   │   ├── SerialKeyboard.h
+│   │   ├── SerialKeyboardImpl.cpp
+│   │   ├── SerialKeyboardImpl.h
+│   │   ├── TCA8418KeyboardBase.cpp
+│   │   ├── TCA8418KeyboardBase.h
+│   │   ├── TCA8418Keyboard.cpp
+│   │   ├── TCA8418Keyboard.h
+│   │   ├── TDeckProKeyboard.cpp
+│   │   ├── TDeckProKeyboard.h
+│   │   ├── TLoraPagerKeyboard.cpp
+│   │   ├── TLoraPagerKeyboard.h
+│   │   ├── TouchScreenBase.cpp
+│   │   ├── TouchScreenBase.h
+│   │   ├── TouchScreenImpl1.cpp
+│   │   ├── TouchScreenImpl1.h
+│   │   ├── TrackballInterruptBase.cpp
+│   │   ├── TrackballInterruptBase.h
+│   │   ├── TrackballInterruptImpl1.cpp
+│   │   ├── TrackballInterruptImpl1.h
+│   │   ├── UpDownInterruptBase.cpp
+│   │   ├── UpDownInterruptBase.h
+│   │   ├── UpDownInterruptImpl1.cpp
+│   │   └── UpDownInterruptImpl1.h
+│   ├── main.cpp
+│   ├── main.h
+│   ├── memGet.cpp
+│   ├── memGet.h
+│   ├── mesh
+│   │   ├── aes-ccm.cpp
+│   │   ├── aes-ccm.h
+│   │   ├── api
+│   │   │   ├── ethServerAPI.cpp
+│   │   │   ├── ethServerAPI.h
+│   │   │   ├── PacketAPI.cpp
+│   │   │   ├── PacketAPI.h
+│   │   │   ├── ServerAPI.cpp
+│   │   │   ├── ServerAPI.h
+│   │   │   ├── WiFiServerAPI.cpp
+│   │   │   └── WiFiServerAPI.h
+│   │   ├── Channels.cpp
+│   │   ├── Channels.h
+│   │   ├── compression
+│   │   │   ├── unishox2.cpp
+│   │   │   └── unishox2.h
+│   │   ├── CryptoEngine.cpp
+│   │   ├── CryptoEngine.h
+│   │   ├── Default.cpp
+│   │   ├── Default.h
+│   │   ├── eth
+│   │   │   ├── ethClient.cpp
+│   │   │   └── ethClient.h
+│   │   ├── FloodingRouter.cpp
+│   │   ├── FloodingRouter.h
+│   │   ├── generated
+│   │   │   └── meshtastic
+│   │   │       ├── admin.pb.cpp
+│   │   │       ├── admin.pb.h
+│   │   │       ├── apponly.pb.cpp
+│   │   │       ├── apponly.pb.h
+│   │   │       ├── atak.pb.cpp
+│   │   │       ├── atak.pb.h
+│   │   │       ├── cannedmessages.pb.cpp
+│   │   │       ├── cannedmessages.pb.h
+│   │   │       ├── channel.pb.cpp
+│   │   │       ├── channel.pb.h
+│   │   │       ├── clientonly.pb.cpp
+│   │   │       ├── clientonly.pb.h
+│   │   │       ├── config.pb.cpp
+│   │   │       ├── config.pb.h
+│   │   │       ├── connection_status.pb.cpp
+│   │   │       ├── connection_status.pb.h
+│   │   │       ├── deviceonly.pb.cpp
+│   │   │       ├── deviceonly.pb.h
+│   │   │       ├── device_ui.pb.cpp
+│   │   │       ├── device_ui.pb.h
+│   │   │       ├── interdevice.pb.cpp
+│   │   │       ├── interdevice.pb.h
+│   │   │       ├── localonly.pb.cpp
+│   │   │       ├── localonly.pb.h
+│   │   │       ├── mesh.pb.cpp
+│   │   │       ├── mesh.pb.h
+│   │   │       ├── module_config.pb.cpp
+│   │   │       ├── module_config.pb.h
+│   │   │       ├── mqtt.pb.cpp
+│   │   │       ├── mqtt.pb.h
+│   │   │       ├── paxcount.pb.cpp
+│   │   │       ├── paxcount.pb.h
+│   │   │       ├── portnums.pb.cpp
+│   │   │       ├── portnums.pb.h
+│   │   │       ├── powermon.pb.cpp
+│   │   │       ├── powermon.pb.h
+│   │   │       ├── remote_hardware.pb.cpp
+│   │   │       ├── remote_hardware.pb.h
+│   │   │       ├── rtttl.pb.cpp
+│   │   │       ├── rtttl.pb.h
+│   │   │       ├── storeforward.pb.cpp
+│   │   │       ├── storeforward.pb.h
+│   │   │       ├── telemetry.pb.cpp
+│   │   │       ├── telemetry.pb.h
+│   │   │       ├── xmodem.pb.cpp
+│   │   │       └── xmodem.pb.h
+│   │   ├── http
+│   │   │   ├── ContentHandler.cpp
+│   │   │   ├── ContentHandler.h
+│   │   │   ├── ContentHelper.cpp
+│   │   │   ├── ContentHelper.h
+│   │   │   ├── WebServer.cpp
+│   │   │   └── WebServer.h
+│   │   ├── InterfacesTemplates.cpp
+│   │   ├── LLCC68Interface.cpp
+│   │   ├── LLCC68Interface.h
+│   │   ├── LoRaFEMInterface.cpp
+│   │   ├── LoRaFEMInterface.h
+│   │   ├── LR1110Interface.cpp
+│   │   ├── LR1110Interface.h
+│   │   ├── LR1120Interface.cpp
+│   │   ├── LR1120Interface.h
+│   │   ├── LR1121Interface.cpp
+│   │   ├── LR1121Interface.h
+│   │   ├── LR11x0Interface.cpp
+│   │   ├── LR11x0Interface.h
+│   │   ├── MemoryPool.h
+│   │   ├── MeshModule.cpp
+│   │   ├── MeshModule.h
+│   │   ├── MeshPacketQueue.cpp
+│   │   ├── MeshPacketQueue.h
+│   │   ├── mesh-pb-constants.cpp
+│   │   ├── mesh-pb-constants.h
+│   │   ├── MeshRadio.h
+│   │   ├── MeshService.cpp
+│   │   ├── MeshService.h
+│   │   ├── MeshTypes.h
+│   │   ├── NextHopRouter.cpp
+│   │   ├── NextHopRouter.h
+│   │   ├── NodeDB.cpp
+│   │   ├── NodeDB.h
+│   │   ├── PacketCache.cpp
+│   │   ├── PacketCache.h
+│   │   ├── PacketHistory.cpp
+│   │   ├── PacketHistory.h
+│   │   ├── PhoneAPI.cpp
+│   │   ├── PhoneAPI.h
+│   │   ├── PointerQueue.h
+│   │   ├── ProtobufModule.cpp
+│   │   ├── ProtobufModule.h
+│   │   ├── RadioInterface.cpp
+│   │   ├── RadioInterface.h
+│   │   ├── RadioLibInterface.cpp
+│   │   ├── RadioLibInterface.h
+│   │   ├── RadioLibRF95.cpp
+│   │   ├── RadioLibRF95.h
+│   │   ├── raspihttp
+│   │   │   ├── PiWebServer.cpp
+│   │   │   └── PiWebServer.h
+│   │   ├── ReliableRouter.cpp
+│   │   ├── ReliableRouter.h
+│   │   ├── RF95Interface.cpp
+│   │   ├── RF95Interface.h
+│   │   ├── Router.cpp
+│   │   ├── Router.h
+│   │   ├── SinglePortModule.h
+│   │   ├── StaticPointerQueue.h
+│   │   ├── STM32WLE5JCInterface.cpp
+│   │   ├── STM32WLE5JCInterface.h
+│   │   ├── StreamAPI.cpp
+│   │   ├── StreamAPI.h
+│   │   ├── SX1262Interface.cpp
+│   │   ├── SX1262Interface.h
+│   │   ├── SX1268Interface.cpp
+│   │   ├── SX1268Interface.h
+│   │   ├── SX126xInterface.cpp
+│   │   ├── SX126xInterface.h
+│   │   ├── SX1280Interface.cpp
+│   │   ├── SX1280Interface.h
+│   │   ├── SX128xInterface.cpp
+│   │   ├── SX128xInterface.h
+│   │   ├── Throttle.cpp
+│   │   ├── Throttle.h
+│   │   ├── TransmitHistory.cpp
+│   │   ├── TransmitHistory.h
+│   │   ├── TypeConversions.cpp
+│   │   ├── TypeConversions.h
+│   │   ├── TypedQueue.h
+│   │   ├── udp
+│   │   │   └── UdpMulticastHandler.h
+│   │   └── wifi
+│   │       ├── WiFiAPClient.cpp
+│   │       └── WiFiAPClient.h
+│   ├── meshUtils.cpp
+│   ├── meshUtils.h
+│   ├── MessageStore.cpp
+│   ├── MessageStore.h
+│   ├── modules
+│   │   ├── AdminModule.cpp
+│   │   ├── AdminModule.h
+│   │   ├── AtakPluginModule.cpp
+│   │   ├── AtakPluginModule.h
+│   │   ├── CannedMessageModule.cpp
+│   │   ├── CannedMessageModule.h
+│   │   ├── DetectionSensorModule.cpp
+│   │   ├── DetectionSensorModule.h
+│   │   ├── DropzoneModule.cpp
+│   │   ├── DropzoneModule.h
+│   │   ├── esp32
+│   │   │   ├── AudioModule.cpp
+│   │   │   ├── AudioModule.h
+│   │   │   ├── PaxcounterModule.cpp
+│   │   │   └── PaxcounterModule.h
+│   │   ├── ExternalNotificationModule.cpp
+│   │   ├── ExternalNotificationModule.h
+│   │   ├── GenericThreadModule.cpp
+│   │   ├── GenericThreadModule.h
+│   │   ├── KeyVerificationModule.cpp
+│   │   ├── KeyVerificationModule.h
+│   │   ├── ModuleDev.h
+│   │   ├── Modules.cpp
+│   │   ├── Modules.h
+│   │   ├── NeighborInfoModule.cpp
+│   │   ├── NeighborInfoModule.h
+│   │   ├── NodeInfoModule.cpp
+│   │   ├── NodeInfoModule.h
+│   │   ├── OnScreenKeyboardModule.cpp
+│   │   ├── OnScreenKeyboardModule.h
+│   │   ├── PositionModule.cpp
+│   │   ├── PositionModule.h
+│   │   ├── PowerStressModule.cpp
+│   │   ├── PowerStressModule.h
+│   │   ├── RangeTestModule.cpp
+│   │   ├── RangeTestModule.h
+│   │   ├── RemoteHardwareModule.cpp
+│   │   ├── RemoteHardwareModule.h
+│   │   ├── ReplyBotModule.cpp
+│   │   ├── ReplyBotModule.h
+│   │   ├── ReplyModule.cpp
+│   │   ├── ReplyModule.h
+│   │   ├── RoutingModule.cpp
+│   │   ├── RoutingModule.h
+│   │   ├── SerialModule.cpp
+│   │   ├── SerialModule.h
+│   │   ├── StatusLEDModule.cpp
+│   │   ├── StatusLEDModule.h
+│   │   ├── StatusMessageModule.cpp
+│   │   ├── StatusMessageModule.h
+│   │   ├── StoreForwardModule.cpp
+│   │   ├── StoreForwardModule.h
+│   │   ├── SystemCommandsModule.cpp
+│   │   ├── SystemCommandsModule.h
+│   │   ├── Telemetry
+│   │   │   ├── AirQualityTelemetry.cpp
+│   │   │   ├── AirQualityTelemetry.h
+│   │   │   ├── BaseTelemetryModule.h
+│   │   │   ├── DeviceTelemetry.cpp
+│   │   │   ├── DeviceTelemetry.h
+│   │   │   ├── EnvironmentTelemetry.cpp
+│   │   │   ├── EnvironmentTelemetry.h
+│   │   │   ├── HealthTelemetry.cpp
+│   │   │   ├── HealthTelemetry.h
+│   │   │   ├── HostMetrics.cpp
+│   │   │   ├── HostMetrics.h
+│   │   │   ├── PowerTelemetry.cpp
+│   │   │   ├── PowerTelemetry.h
+│   │   │   ├── Sensor
+│   │   │   │   ├── AddI2CSensorTemplate.h
+│   │   │   │   ├── AHT10.cpp
+│   │   │   │   ├── AHT10.h
+│   │   │   │   ├── BH1750Sensor.cpp
+│   │   │   │   ├── BH1750Sensor.h
+│   │   │   │   ├── BME280Sensor.cpp
+│   │   │   │   ├── BME280Sensor.h
+│   │   │   │   ├── BME680Sensor.cpp
+│   │   │   │   ├── BME680Sensor.h
+│   │   │   │   ├── BMP085Sensor.cpp
+│   │   │   │   ├── BMP085Sensor.h
+│   │   │   │   ├── BMP280Sensor.cpp
+│   │   │   │   ├── BMP280Sensor.h
+│   │   │   │   ├── BMP3XXSensor.cpp
+│   │   │   │   ├── BMP3XXSensor.h
+│   │   │   │   ├── CGRadSensSensor.cpp
+│   │   │   │   ├── CGRadSensSensor.h
+│   │   │   │   ├── CurrentSensor.h
+│   │   │   │   ├── DFRobotGravitySensor.cpp
+│   │   │   │   ├── DFRobotGravitySensor.h
+│   │   │   │   ├── DFRobotLarkSensor.cpp
+│   │   │   │   ├── DFRobotLarkSensor.h
+│   │   │   │   ├── DPS310Sensor.cpp
+│   │   │   │   ├── DPS310Sensor.h
+│   │   │   │   ├── INA219Sensor.cpp
+│   │   │   │   ├── INA219Sensor.h
+│   │   │   │   ├── INA226Sensor.cpp
+│   │   │   │   ├── INA226Sensor.h
+│   │   │   │   ├── INA260Sensor.cpp
+│   │   │   │   ├── INA260Sensor.h
+│   │   │   │   ├── INA3221Sensor.cpp
+│   │   │   │   ├── INA3221Sensor.h
+│   │   │   │   ├── IndicatorSensor.cpp
+│   │   │   │   ├── IndicatorSensor.h
+│   │   │   │   ├── LPS22HBSensor.cpp
+│   │   │   │   ├── LPS22HBSensor.h
+│   │   │   │   ├── LTR390UVSensor.cpp
+│   │   │   │   ├── LTR390UVSensor.h
+│   │   │   │   ├── MAX17048Sensor.cpp
+│   │   │   │   ├── MAX17048Sensor.h
+│   │   │   │   ├── MAX30102Sensor.cpp
+│   │   │   │   ├── MAX30102Sensor.h
+│   │   │   │   ├── MCP9808Sensor.cpp
+│   │   │   │   ├── MCP9808Sensor.h
+│   │   │   │   ├── MLX90614Sensor.cpp
+│   │   │   │   ├── MLX90614Sensor.h
+│   │   │   │   ├── MLX90632Sensor.cpp
+│   │   │   │   ├── MLX90632Sensor.h
+│   │   │   │   ├── NAU7802Sensor.cpp
+│   │   │   │   ├── NAU7802Sensor.h
+│   │   │   │   ├── nullSensor.cpp
+│   │   │   │   ├── nullSensor.h
+│   │   │   │   ├── OPT3001Sensor.cpp
+│   │   │   │   ├── OPT3001Sensor.h
+│   │   │   │   ├── PCT2075Sensor.cpp
+│   │   │   │   ├── PCT2075Sensor.h
+│   │   │   │   ├── PMSA003ISensor.cpp
+│   │   │   │   ├── PMSA003ISensor.h
+│   │   │   │   ├── RAK12035Sensor.cpp
+│   │   │   │   ├── RAK12035Sensor.h
+│   │   │   │   ├── RAK9154Sensor.cpp
+│   │   │   │   ├── RAK9154Sensor.h
+│   │   │   │   ├── RCWL9620Sensor.cpp
+│   │   │   │   ├── RCWL9620Sensor.h
+│   │   │   │   ├── SCD30Sensor.cpp
+│   │   │   │   ├── SCD30Sensor.h
+│   │   │   │   ├── SCD4XSensor.cpp
+│   │   │   │   ├── SCD4XSensor.h
+│   │   │   │   ├── SEN5XSensor.cpp
+│   │   │   │   ├── SEN5XSensor.h
+│   │   │   │   ├── SFA30Sensor.cpp
+│   │   │   │   ├── SFA30Sensor.h
+│   │   │   │   ├── SHT31Sensor.cpp
+│   │   │   │   ├── SHT31Sensor.h
+│   │   │   │   ├── SHT4XSensor.cpp
+│   │   │   │   ├── SHT4XSensor.h
+│   │   │   │   ├── SHTC3Sensor.cpp
+│   │   │   │   ├── SHTC3Sensor.h
+│   │   │   │   ├── T1000xSensor.cpp
+│   │   │   │   ├── T1000xSensor.h
+│   │   │   │   ├── TelemetrySensor.cpp
+│   │   │   │   ├── TelemetrySensor.h
+│   │   │   │   ├── TSL2561Sensor.cpp
+│   │   │   │   ├── TSL2561Sensor.h
+│   │   │   │   ├── TSL2591Sensor.cpp
+│   │   │   │   ├── TSL2591Sensor.h
+│   │   │   │   ├── VEML7700Sensor.cpp
+│   │   │   │   ├── VEML7700Sensor.h
+│   │   │   │   └── VoltageSensor.h
+│   │   │   ├── UnitConversions.cpp
+│   │   │   └── UnitConversions.h
+│   │   ├── TextMessageModule.cpp
+│   │   ├── TextMessageModule.h
+│   │   ├── TraceRouteModule.cpp
+│   │   ├── TraceRouteModule.h
+│   │   ├── TrafficManagementModule.cpp
+│   │   ├── TrafficManagementModule.h
+│   │   ├── WaypointModule.cpp
+│   │   └── WaypointModule.h
+│   ├── motion
+│   │   ├── AccelerometerThread.h
+│   │   ├── BMA423Sensor.cpp
+│   │   ├── BMA423Sensor.h
+│   │   ├── BMI270Sensor.cpp
+│   │   ├── BMI270Sensor.h
+│   │   ├── BMM150Sensor.cpp
+│   │   ├── BMM150Sensor.h
+│   │   ├── BMX160Sensor.cpp
+│   │   ├── BMX160Sensor.h
+│   │   ├── ICM20948Sensor.cpp
+│   │   ├── ICM20948Sensor.h
+│   │   ├── LIS3DHSensor.cpp
+│   │   ├── LIS3DHSensor.h
+│   │   ├── LSM6DS3Sensor.cpp
+│   │   ├── LSM6DS3Sensor.h
+│   │   ├── MotionSensor.cpp
+│   │   ├── MotionSensor.h
+│   │   ├── MPU6050Sensor.cpp
+│   │   ├── MPU6050Sensor.h
+│   │   ├── QMA6100PSensor.cpp
+│   │   ├── QMA6100PSensor.h
+│   │   ├── STK8XXXSensor.cpp
+│   │   └── STK8XXXSensor.h
+│   ├── mqtt
+│   │   ├── MQTT.cpp
+│   │   ├── MQTT.h
+│   │   ├── ServiceEnvelope.cpp
+│   │   └── ServiceEnvelope.h
+│   ├── network-stubs.cpp
+│   ├── nimble
+│   │   ├── NimbleBluetooth.cpp
+│   │   └── NimbleBluetooth.h
+│   ├── NodeStatus.h
+│   ├── Observer.cpp
+│   ├── Observer.h
+│   ├── platform
+│   │   ├── esp32
+│   │   │   ├── architecture.h
+│   │   │   ├── ESP32CryptoEngine.cpp
+│   │   │   ├── iram-quirk.c
+│   │   │   ├── main-esp32.cpp
+│   │   │   ├── MeshtasticOTA.cpp
+│   │   │   ├── MeshtasticOTA.h
+│   │   │   ├── SimpleAllocator.cpp
+│   │   │   └── SimpleAllocator.h
+│   │   ├── extra_variants
+│   │   │   ├── heltec_wireless_tracker
+│   │   │   │   └── variant.cpp
+│   │   │   ├── README.md
+│   │   │   ├── tbeam_displayshield
+│   │   │   │   └── variant.cpp
+│   │   │   ├── t_deck_pro
+│   │   │   │   └── variant.cpp
+│   │   │   └── t_lora_pager
+│   │   │       └── variant.cpp
+│   │   ├── nrf52
+│   │   │   ├── aes-256
+│   │   │   │   ├── tiny-aes.cpp
+│   │   │   │   └── tiny-aes.h
+│   │   │   ├── alloc.cpp
+│   │   │   ├── architecture.h
+│   │   │   ├── AsyncUDP.cpp
+│   │   │   ├── AsyncUDP.h
+│   │   │   ├── BLEDfuSecure.cpp
+│   │   │   ├── BLEDfuSecure.h
+│   │   │   ├── hardfault.cpp
+│   │   │   ├── main-bare.cpp
+│   │   │   ├── main-nrf52.cpp
+│   │   │   ├── nrf52840_s140_v7.ld
+│   │   │   ├── NRF52Bluetooth.cpp
+│   │   │   ├── NRF52Bluetooth.h
+│   │   │   ├── NRF52CryptoEngine.cpp
+│   │   │   └── softdevice
+│   │   │       ├── ble_err.h
+│   │   │       ├── ble_gap.h
+│   │   │       ├── ble_gattc.h
+│   │   │       ├── ble_gatt.h
+│   │   │       ├── ble_gatts.h
+│   │   │       ├── ble.h
+│   │   │       ├── ble_hci.h
+│   │   │       ├── ble_l2cap.h
+│   │   │       ├── ble_ranges.h
+│   │   │       ├── ble_types.h
+│   │   │       ├── nrf52
+│   │   │       │   └── nrf_mbr.h
+│   │   │       ├── nrf_error.h
+│   │   │       ├── nrf_error_sdm.h
+│   │   │       ├── nrf_error_soc.h
+│   │   │       ├── nrf_nvic.h
+│   │   │       ├── nrf_sdm.h
+│   │   │       ├── nrf_soc.h
+│   │   │       └── nrf_svc.h
+│   │   ├── portduino
+│   │   │   ├── architecture.h
+│   │   │   ├── PortduinoGlue.cpp
+│   │   │   ├── PortduinoGlue.h
+│   │   │   ├── SimRadio.cpp
+│   │   │   ├── SimRadio.h
+│   │   │   └── USBHal.h
+│   │   ├── rp2xx0
+│   │   │   ├── architecture.h
+│   │   │   ├── hardware_rosc
+│   │   │   │   ├── include
+│   │   │   │   │   └── hardware
+│   │   │   │   │       └── rosc.h
+│   │   │   │   └── rosc.c
+│   │   │   ├── main-rp2xx0.cpp
+│   │   │   └── pico_sleep
+│   │   │       ├── include
+│   │   │       │   └── pico
+│   │   │       │       └── sleep.h
+│   │   │       └── sleep.c
+│   │   └── stm32wl
+│   │       ├── architecture.h
+│   │       ├── littlefs
+│   │       │   ├── lfs.c
+│   │       │   ├── lfs.h
+│   │       │   ├── lfs_util.c
+│   │       │   └── lfs_util.h
+│   │       ├── LittleFS.cpp
+│   │       ├── LittleFS.h
+│   │       ├── main-stm32wl.cpp
+│   │       ├── STM32_LittleFS.cpp
+│   │       ├── STM32_LittleFS_File.cpp
+│   │       ├── STM32_LittleFS_File.h
+│   │       └── STM32_LittleFS.h
+│   ├── power
+│   │   ├── PowerHAL.cpp
+│   │   └── PowerHAL.h
+│   ├── Power.cpp
+│   ├── PowerFSM.cpp
+│   ├── PowerFSM.h
+│   ├── PowerFSMThread.h
+│   ├── power.h
+│   ├── PowerMon.cpp
+│   ├── PowerMon.h
+│   ├── PowerStatus.h
+│   ├── RedirectablePrint.cpp
+│   ├── RedirectablePrint.h
+│   ├── RF95Configuration.h
+│   ├── SafeFile.cpp
+│   ├── SafeFile.h
+│   ├── SerialConsole.cpp
+│   ├── SerialConsole.h
+│   ├── serialization
+│   │   ├── cobs.cpp
+│   │   ├── cobs.h
+│   │   ├── JSON.cpp
+│   │   ├── JSON.h
+│   │   ├── JSONValue.cpp
+│   │   ├── JSONValue.h
+│   │   ├── MeshPacketSerializer.cpp
+│   │   ├── MeshPacketSerializer.h
+│   │   └── MeshPacketSerializer_nRF52.cpp
+│   ├── sleep.cpp
+│   ├── sleep.h
+│   ├── SPILock.cpp
+│   ├── SPILock.h
+│   ├── Status.h
+│   ├── target_specific.h
+│   ├── watchdog
+│   │   ├── watchdogThread.cpp
+│   │   └── watchdogThread.h
+│   ├── xmodem.cpp
+│   └── xmodem.h
+├── suppressions.txt
+├── test
+│   ├── test_atak
+│   │   └── test_main.cpp
+│   ├── test_crypto
+│   │   └── test_main.cpp
+│   ├── test_default
+│   │   └── test_main.cpp
+│   ├── test_http_content_handler
+│   │   └── test_main.cpp
+│   ├── test_mesh_module
+│   │   └── test_main.cpp
+│   ├── test_meshpacket_serializer
+│   │   ├── ports
+│   │   │   ├── test_encrypted.cpp
+│   │   │   ├── test_nodeinfo.cpp
+│   │   │   ├── test_position.cpp
+│   │   │   ├── test_telemetry.cpp
+│   │   │   ├── test_text_message.cpp
+│   │   │   └── test_waypoint.cpp
+│   │   ├── test_helpers.h
+│   │   └── test_serializer.cpp
+│   ├── test_mqtt
+│   │   └── MQTT.cpp
+│   ├── test_radio
+│   │   └── test_main.cpp
+│   ├── test_serial
+│   │   └── SerialModule.cpp
+│   ├── test_traffic_management
+│   │   └── test_main.cpp
+│   ├── test_transmit_history
+│   │   └── test_main.cpp
+│   ├── TestUtil.cpp
+│   └── TestUtil.h
+├── tree.txt
+├── userPrefs.jsonc
+├── variants
+│   ├── esp32
+│   │   ├── betafpv_2400_tx_micro
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── betafpv_900_tx_nano
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── chatter2
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── diy
+│   │   │   ├── 9m2ibr_aprs_lora_tracker
+│   │   │   │   ├── platformio.ini
+│   │   │   │   ├── variant.cpp
+│   │   │   │   └── variant.h
+│   │   │   ├── dr-dev
+│   │   │   │   ├── platformio.ini
+│   │   │   │   └── variant.h
+│   │   │   ├── hydra
+│   │   │   │   ├── platformio.ini
+│   │   │   │   └── variant.h
+│   │   │   ├── v1
+│   │   │   │   ├── platformio.ini
+│   │   │   │   └── variant.h
+│   │   │   └── v1_1
+│   │   │       ├── platformio.ini
+│   │   │       └── variant.h
+│   │   ├── esp32-common.ini
+│   │   ├── esp32.ini
+│   │   ├── hackerboxes_esp32_io
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_v1
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_v2
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_v2.1
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_wireless_bridge
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_wsl_v2.1
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── m5stack_core
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── m5stack_coreink
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── nano-g1
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── nano-g1-explorer
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── radiomaster_900_bandit
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── radiomaster_900_bandit_micro
+│   │   │   └── platformio.ini
+│   │   ├── radiomaster_900_bandit_nano
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── rak11200
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── station-g1
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── tbeam
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── tbeam_v07
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── tlora_v1
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── tlora_v1_3
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── tlora_v2
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── tlora_v2_1_16
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── tlora_v2_1_16_tcxo
+│   │   │   └── platformio.ini
+│   │   ├── tlora_v2_1_18
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── tlora_v3_3_0_tcxo
+│   │   │   └── platformio.ini
+│   │   ├── trackerd
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   └── wiphone
+│   │       ├── pins_arduino.h
+│   │       ├── platformio.ini
+│   │       └── variant.h
+│   ├── esp32c3
+│   │   ├── ai-c3
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── diy
+│   │   │   └── esp32c3_super_mini
+│   │   │       ├── pins_arduino.h
+│   │   │       ├── platformio.ini
+│   │   │       └── variant.h
+│   │   ├── esp32c3.ini
+│   │   ├── hackerboxes_esp32c3_oled
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_esp32c3
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_hru_3601
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   └── m5stack-stamp-c3
+│   │       ├── pins_arduino.h
+│   │       ├── platformio.ini
+│   │       └── variant.h
+│   ├── esp32c6
+│   │   ├── esp32c6.ini
+│   │   ├── m5stack_unitc6l
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   └── tlora_c6
+│   │       ├── platformio.ini
+│   │       └── variant.h
+│   ├── esp32s2
+│   │   ├── esp32s2.ini
+│   │   └── nugget_s2_lora
+│   │       ├── platformio.ini
+│   │       └── variant.h
+│   ├── esp32s3
+│   │   ├── bpi_picow_esp32_s3
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── CDEBYTE_EoRa-Hub
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── rfswitch.h
+│   │   │   └── variant.h
+│   │   ├── CDEBYTE_EoRa-S3
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── crowpanel-esp32s3-5-epaper
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── diy
+│   │   │   ├── my_esp32s3_diy_eink
+│   │   │   │   ├── pins_arduino.h
+│   │   │   │   ├── platformio.ini
+│   │   │   │   └── variant.h
+│   │   │   ├── my_esp32s3_diy_oled
+│   │   │   │   ├── pins_arduino.h
+│   │   │   │   ├── platformio.ini
+│   │   │   │   └── variant.h
+│   │   │   └── t-energy-s3_e22
+│   │   │       ├── platformio.ini
+│   │   │       └── variant.h
+│   │   ├── dreamcatcher
+│   │   │   ├── platformio.ini
+│   │   │   ├── rfswitch.h
+│   │   │   └── variant.h
+│   │   ├── EBYTE_ESP32-S3
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── elecrow_panel
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── ELECROW-ThinkNode-M2
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── ELECROW-ThinkNode-M5
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── esp32s3.ini
+│   │   ├── esp32-s3-pico
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── hackaday-communicator
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── heltec_capsule_sensor_v3
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_sensor_hub
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_v3
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_v4
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_vision_master_e213
+│   │   │   ├── einkDetect.h
+│   │   │   ├── nicheGraphics.h
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_vision_master_e290
+│   │   │   ├── nicheGraphics.h
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_vision_master_t190
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_wireless_paper
+│   │   │   ├── einkDetect.h
+│   │   │   ├── nicheGraphics.h
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_wireless_paper_v1
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_wireless_tracker
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_wireless_tracker_V1_0
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_wireless_tracker_v2
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── heltec_wsl_v3
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── icarus
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── link32_s3_v1
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── m5stack_cardputer_adv
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── m5stack_cores3
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── mesh-tab
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── mini-epaper-s3
+│   │   │   ├── nicheGraphics.h
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── nibble_esp32
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── nugget_s3_lora
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── picomputer-s3
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── rak3312
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── rak_wismesh_tap_v2
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── seeed-sensecap-indicator
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── seeed_xiao_s3
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── station-g2
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── t-beam-1w
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── tbeam-s3-core
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── rfswitch.h
+│   │   │   └── variant.h
+│   │   ├── t-deck
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── t-deck-pro
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── t-eth-elite
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── rfswitch.h
+│   │   │   └── variant.h
+│   │   ├── tlora-pager
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── rfswitch.h
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── tlora_t3s3_epaper
+│   │   │   ├── nicheGraphics.h
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── tlora_t3s3_v1
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── rfswitch.h
+│   │   │   └── variant.h
+│   │   ├── tracksenger
+│   │   │   ├── internal
+│   │   │   │   ├── pins_arduino.h
+│   │   │   │   └── variant.h
+│   │   │   ├── lcd
+│   │   │   │   ├── pins_arduino.h
+│   │   │   │   └── variant.h
+│   │   │   ├── oled
+│   │   │   │   ├── pins_arduino.h
+│   │   │   │   └── variant.h
+│   │   │   └── platformio.ini
+│   │   ├── tropicon2026
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── SI4463
+│   │   │   │   ├── radio_config.h
+│   │   │   │   ├── Si4463Module.cpp
+│   │   │   │   ├── Si4463Module.h
+│   │   │   │   ├── Si446x_config.h
+│   │   │   │   ├── Si446x.cpp
+│   │   │   │   ├── Si446x_defs.h
+│   │   │   │   ├── Si446x.h
+│   │   │   │   ├── Si446xInterface.cpp
+│   │   │   │   └── Si446xInterface.h
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── t-watch-s3
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   └── unphone
+│   │       ├── pins_arduino.h
+│   │       ├── platformio.ini
+│   │       ├── variant.cpp
+│   │       └── variant.h
+│   ├── native
+│   │   ├── portduino
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── portduino-buildroot
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   └── portduino.ini
+│   ├── nrf52840
+│   │   ├── canaryone
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── cpp_overrides
+│   │   │   └── lfs_util.h
+│   │   ├── diy
+│   │   │   ├── nrf52_promicro_diy_tcxo
+│   │   │   │   ├── custom_build_tasks.py
+│   │   │   │   ├── E80_RSSI_per_case.webp
+│   │   │   │   ├── nicheGraphics.h
+│   │   │   │   ├── platformio.ini
+│   │   │   │   ├── readme.md
+│   │   │   │   ├── rfswitch.h
+│   │   │   │   ├── Schematic_Pro-micro_Pinouts_2025-12-04.pdf
+│   │   │   │   ├── variant.cpp
+│   │   │   │   └── variant.h
+│   │   │   ├── seeed_xiao_nrf52840_e22
+│   │   │   │   └── platformio.ini
+│   │   │   ├── seeed-xiao-nrf52840-wio-sx1262
+│   │   │   │   ├── platformio.ini
+│   │   │   │   └── README.md
+│   │   │   ├── WashTastic
+│   │   │   │   └── platformio.ini
+│   │   │   └── xiao_ble
+│   │   │       ├── platformio.ini
+│   │   │       └── README.md
+│   │   ├── dls_Minimesh_Lite
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── Dongle_nRF52840-pca10059-v1
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── ELECROW-ThinkNode-M1
+│   │   │   ├── nicheGraphics.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── ELECROW-ThinkNode-M3
+│   │   │   ├── platformio.ini
+│   │   │   ├── rfswitch.h
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── ELECROW-ThinkNode-M4
+│   │   │   ├── platformio.ini
+│   │   │   ├── rfswitch.h
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── ELECROW-ThinkNode-M6
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── feather_diy
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── gat562_mesh_trial_tracker
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── heltec_mesh_node_t114
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── heltec_mesh_node_t114-inkhud
+│   │   │   ├── custom_build_tasks.py
+│   │   │   ├── nicheGraphics.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── heltec_mesh_pocket
+│   │   │   ├── nicheGraphics.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── heltec_mesh_solar
+│   │   │   ├── nicheGraphics.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── MakePython_nRF52840_eink
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── MakePython_nRF52840_oled
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── ME25LS01-4Y10TD
+│   │   │   ├── platformio.ini
+│   │   │   ├── rfswitch.h
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── ME25LS01-4Y10TD_e-ink
+│   │   │   ├── platformio.ini
+│   │   │   ├── rfswitch.h
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── meshlink
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── meshtiny
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── monteops_hw1
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── MS24SF1
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── muzi_base
+│   │   │   ├── platformio.ini
+│   │   │   ├── rfswitch.h
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── nano-g2-ultra
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── nrf52832.ini
+│   │   ├── nrf52840.ini
+│   │   ├── nrf52.ini
+│   │   ├── r1-neo
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── rak2560
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── rak3401_1watt
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── rak4631
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── rak4631_epaper
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── rak4631_epaper_onrxtx
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── rak4631_eth_gw
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── rak4631_nomadstar_meteor_pro
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── rak_wismeshtag
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── rak_wismeshtap
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── seeed_solar_node
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── seeed_wio_tracker_L1
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── seeed_wio_tracker_L1_eink
+│   │   │   ├── nicheGraphics.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── seeed_xiao_nrf52840_kit
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── t-echo
+│   │   │   ├── nicheGraphics.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── t-echo-lite
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── t-echo-plus
+│   │   │   ├── nicheGraphics.h
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── tracker-t1000-e
+│   │   │   ├── platformio.ini
+│   │   │   ├── rfswitch.h
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── TWC_mesh_v4
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── wio-sdk-wm1110
+│   │   │   ├── platformio.ini
+│   │   │   ├── rfswitch.h
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── wio-t1000-s
+│   │   │   ├── platformio.ini
+│   │   │   ├── rfswitch.h
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   └── wio-tracker-wm1110
+│   │       ├── platformio.ini
+│   │       ├── rfswitch.h
+│   │       ├── variant.cpp
+│   │       └── variant.h
+│   ├── rp2040
+│   │   ├── challenger_2040_lora
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── ec_catsniffer
+│   │   │   ├── platformio.ini
+│   │   │   ├── variant.cpp
+│   │   │   └── variant.h
+│   │   ├── feather_rp2040_rfm95
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── nibble_rp2040
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── rak11310
+│   │   │   ├── pins_arduino.h
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── rp2040.ini
+│   │   ├── rp2040-lora
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── rpipico
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── rpipico-slowclock
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   ├── rpipicow
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   └── senselora_rp2040
+│   │       ├── pins_arduino.h
+│   │       ├── platformio.ini
+│   │       └── variant.h
+│   ├── rp2350
+│   │   ├── rp2350.ini
+│   │   ├── rpipico2
+│   │   │   ├── platformio.ini
+│   │   │   └── variant.h
+│   │   └── rpipico2w
+│   │       ├── platformio.ini
+│   │       └── variant.h
+│   └── stm32
+│       ├── CDEBYTE_E77-MBL
+│       │   ├── platformio.ini
+│       │   ├── rfswitch.h
+│       │   └── variant.h
+│       ├── milesight_gs301
+│       │   ├── platformio.ini
+│       │   ├── rfswitch.h
+│       │   ├── variant.cpp
+│       │   └── variant.h
+│       ├── rak3172
+│       │   ├── platformio.ini
+│       │   ├── rfswitch.h
+│       │   └── variant.h
+│       ├── russell
+│       │   ├── platformio.ini
+│       │   ├── rfswitch.h
+│       │   └── variant.h
+│       ├── stm32.ini
+│       └── wio-e5
+│           ├── platformio.ini
+│           ├── rfswitch.h
+│           └── variant.h
+└── version.properties
+
+307 directories, 1531 files

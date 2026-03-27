@@ -31,6 +31,16 @@
 #define I2C_SDA        42   // IO42 = SDA
 #define I2C_SCL        41   // IO41 = SCL
 
+// ── SI4463 Radio — SPI ───────────────────────────────────────────────────────
+
+#define SI4463_CS            14   // IO14 = CS2
+#define SI4463_SDN            4   // IO04 = SDN
+#define SI4463_IRQ            8   // IO08 = IRQ
+#define SI4463_SCK           15   // IO15 = SCK2
+#define SI4463_MOSI          16   // IO16 = MOSI2
+#define SI4463_MISO          17   // IO17 = MISO2
+
+
 // ── Display ER-TFT2.79-1 (controller: NV3007) — SPI Bus 2 (HSPI) ─────────────
 //
 //   NV3007 pin  │ KiCad label │ ESP32-S3 pin │ SPI function
