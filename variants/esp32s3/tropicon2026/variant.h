@@ -1,3 +1,10 @@
+// ══════════════════════════════════════════════════════════════════════════════
+// variant.h — Custom hardware definition for ESP32-S3-WROOM-1-N8
+// Board: Tropicon 2026
+// Firmware: Meshtastic / PlatformIO
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── SX1262 LoRa — SPI Bus 1 ──────────────────────────────────────────────────
 #define USE_SX1262
 
 // SPI Bus Pins
@@ -19,3 +26,48 @@
 
 #define SX126X_DIO2_AS_RF_SWITCH
 #define SX126X_DIO3_TCXO_VOLTAGE 1.8
+
+// ── I2C Bus 1 — AHT30 Temperature & Humidity Sensor ──────────────────────────
+#define I2C_SDA        42   // IO42 = SDA
+#define I2C_SCL        41   // IO41 = SCL
+
+// ── Display ER-TFT2.79-1 (controller: NV3007) — SPI Bus 2 (HSPI) ─────────────
+//
+//   NV3007 pin  │ KiCad label │ ESP32-S3 pin │ SPI function
+//   ────────────┼─────────────┼──────────────┼──────────────
+//   SDA         │ SDA         │ IO11         │ MOSI (serial data in)
+//   SCL         │ SCL         │ IO12         │ SCLK (serial clock)
+//   D/CX        │ RS          │ IO09         │ Data/Command select
+//   CSX         │ CS1         │ IO10         │ Chip Select (active low)
+//   RESX        │ RSTB        │ IO21         │ Reset (active low)
+//   TE          │ TE          │ IO13         │ Tearing Effect (frame sync)
+//
+// ── Display ER-TFT2.79-1 (controller: NV3007) — SPI Bus 2 (HSPI) ─────────────
+// Using Arduino_GFX with Arduino_NV3007 driver (same as hackaday-communicator)
+
+/*
+#define TFT_BL                  2    // IO02 = LCD_BRIGHT (PWM output)
+#define SPI_FREQUENCY           2000000
+#define SPI_READ_FREQUENCY      16000000
+#define TFT_HEIGHT              428  // Long axis (rows)
+#define TFT_WIDTH               142  // Short axis (columns) - Corrected to match NV3007 spec
+#define TFT_OFFSET_X            0
+#define TFT_OFFSET_Y            0
+#define TFT_OFFSET_ROTATION     0
+#define SCREEN_TRANSITION_FRAMERATE 5
+#define HAS_SCREEN              1
+#define TFT_BLACK               0
+#define BRIGHTNESS_DEFAULT      130  // Medium Low Brightness
+#define USE_TFTDISPLAY          1
+
+// SPI pins for display (same naming as hackaday-communicator)
+#define TFT_DC                  9    // IO09 = D/CX (Data/Command select)
+#define TFT_CS                  10   // IO10 = CSX (Chip Select)
+
+// SPI bus configuration
+#define TFT_MOSI                11   // IO11 = SDA (SPI MOSI)
+#define TFT_SCLK                12   // IO12 = SCL (SPI SCLK)
+
+#define USE_POWERSAVE
+#define SLEEP_TIME              120
+*/
