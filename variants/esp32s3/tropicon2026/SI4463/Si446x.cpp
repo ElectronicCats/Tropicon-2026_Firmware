@@ -44,6 +44,8 @@ static volatile uint8_t enabledInterrupts[3];
 #define spi_transfer_nr(data) _spi_bus->transfer(data)
 #define spi_transfer(data)    _spi_bus->transfer(data)
 
+static volatile bool _irq_enabled = false;
+
 static const uint8_t config_data[] PROGMEM = RADIO_CONFIGURATION_DATA_ARRAY;
 
 // Internal helpers for atomicity
@@ -69,10 +71,7 @@ static inline uint8_t interrupt_on(void)
 
 uint8_t Si446x_irq_off()
 {
-    if (_irq_pin != -1)
-    {
-        detachInterrupt(digitalPinToInterrupt(_irq_pin));
-    }
+    _irq_enabled = false;
     isrState_local++;
     return 0;
 }
@@ -82,7 +81,7 @@ void Si446x_irq_on(uint8_t origVal)
     (void)origVal;
     if (isrState_local > 0) isrState_local--;
     if (isrState_local == 0 && _irq_pin != -1) {
-        attachInterrupt(digitalPinToInterrupt(_irq_pin), Si446x_SERVICE, FALLING);
+        _irq_enabled = true;
     }
 }
 
@@ -90,6 +89,7 @@ void Si446x_irq_on(uint8_t origVal)
 
 static inline uint8_t cselect(void)
 {
+    _spi_bus->beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));
     spiSelect();
     return 1;
 }
@@ -97,6 +97,7 @@ static inline uint8_t cselect(void)
 static inline uint8_t cdeselect(void)
 {
     spiDeselect();
+    _spi_bus->endTransaction();
     return 0;
 }
 
@@ -309,6 +310,11 @@ void Si446x_init(uint8_t cs, uint8_t sdn, int8_t irq, void* spi)
     Si446x_sleep();
 
     enabledInterrupts[IRQ_PACKET] = (1 << SI446X_PACKET_RX_PEND) | (1 << SI446X_CRC_ERROR_PEND);
+    
+    // Attach interrupt permanently once at boot, then state is toggled via _irq_enabled
+    if (_irq_pin != -1) {
+        attachInterrupt(digitalPinToInterrupt(_irq_pin), Si446x_SERVICE, FALLING);
+    }
     Si446x_irq_on(1);
 }
 
@@ -541,6 +547,7 @@ uint8_t Si446x_readGPIO()
 
 void Si446x_SERVICE()
 {
+    if (!_irq_enabled) return;
     isrBusy = 1;
     uint8_t ints[8];
     interrupt(ints);

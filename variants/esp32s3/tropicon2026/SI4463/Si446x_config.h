@@ -44,20 +44,6 @@
 // Using fixed length packets will stop the length field from being transmitted, reducing the transmission by 3 bytes.
 #define SI446X_FIXED_LENGTH 0
 
-
-///////////////////
-// Pin stuff
-///////////////////
-
-// Pin assignments (managed dynamically in Si446x_init)
-// #define SI446X_CSN			10
-// #define SI446X_SDN			5
-// #define SI446X_IRQ			2 
-
-
-
-
-
 // --------------------------------------
 // Everything below here is for non-Arduino stuff
 // --------------------------------------

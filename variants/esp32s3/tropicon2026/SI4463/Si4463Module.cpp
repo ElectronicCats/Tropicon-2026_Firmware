@@ -38,13 +38,17 @@ void Si4463Module::setup()
 
 bool Si4463Module::wantPacket(const meshtastic_MeshPacket *p)
 {
-    // For now, this module doesn't consume mesh packets.
-    // It's primarily a secondary radio interface.
-    return false;
+    // Return true if you want to forward specific packets via SI4463.
+    // E.g., if (p->decoded.portnum == meshtastic_PortNum_TELEMETRY_APP) return true;
+    return false; // Set to true to test outgoing packets
 }
 
 ProcessMessage Si4463Module::handleReceived(const meshtastic_MeshPacket &mp)
 {
-    // We could potentially forward mesh packets to this radio here
+    // Forward mesh packets to this radio
+    if (_radioIf)
+    {
+        _radioIf->send(const_cast<meshtastic_MeshPacket *>(&mp));
+    }
     return ProcessMessage::CONTINUE;
 }
