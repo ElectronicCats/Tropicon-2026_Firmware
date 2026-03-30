@@ -85,7 +85,7 @@ void Si446x_irq_on(uint8_t origVal)
     }
 }
 
-#define SI446X_NO_INTERRUPT() for(uint8_t _i = Si446x_irq_off(), _tmp = 1; _tmp; _tmp = 0, Si446x_irq_on(_i))
+// Redefinition removed to use the one from Si446x.h
 
 static inline uint8_t cselect(void)
 {
@@ -137,6 +137,7 @@ static uint8_t getResponse(void* buff, uint8_t len)
 
 static uint8_t waitForResponse(void* out, uint8_t outLen, uint8_t useTimeout) 
 {
+    uint16_t timeout = 4000;
     while (!getResponse(out, outLen))
     {
         delay_us(10);

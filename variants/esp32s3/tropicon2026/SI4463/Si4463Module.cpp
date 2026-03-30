@@ -6,6 +6,7 @@
 
 Si4463Module::Si4463Module(uint8_t cs, uint8_t sdn, int8_t irq, SPIClass& spi)
     : MeshModule("Si4463"), _cs(cs), _sdn(sdn), _irq(irq), _spi(spi) {
+    isPromiscuous = true; // See all packets in the mesh
 }
 
 Si4463Module::~Si4463Module()
@@ -38,9 +39,8 @@ void Si4463Module::setup()
 
 bool Si4463Module::wantPacket(const meshtastic_MeshPacket *p)
 {
-    // Return true if you want to forward specific packets via SI4463.
-    // E.g., if (p->decoded.portnum == meshtastic_PortNum_TELEMETRY_APP) return true;
-    return false; // Set to true to test outgoing packets
+    // Return true to receive all packets and forward them via SI4463.
+    return true; 
 }
 
 ProcessMessage Si4463Module::handleReceived(const meshtastic_MeshPacket &mp)

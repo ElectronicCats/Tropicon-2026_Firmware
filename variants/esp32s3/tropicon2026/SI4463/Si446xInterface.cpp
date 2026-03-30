@@ -1,10 +1,12 @@
 #include "Si446xInterface.h"
 #include "Si446x.h"
-#include "MeshService.h"
-#include "MeshRadio.h"
+#include "mesh/MeshService.h"
+#include "mesh/MeshRadio.h"
+#include "mesh/MeshTypes.h"
 #include "PointerQueue.h"
 #include "configuration.h"
 #include "main.h"
+#include "gps/RTC.h"
 
 // Static instance pointer for C-style callbacks
 static Si446xInterface* _instance = nullptr;
@@ -51,22 +53,22 @@ bool Si446xInterface::reconfigure()
 
 ErrorCode Si446xInterface::send(meshtastic_MeshPacket *p)
 {
-    if (disabled) return ErrorCode_RADIO_DISABLED;
+    if (disabled) return ERRNO_DISABLED;
 
     size_t len = beginSending(p);
-    if (len == 0) return ErrorCode_RADIO_CONFIG_ERROR;
+    if (len == 0) return ERRNO_UNKNOWN;
     
     // Meshtastic packets include a header. 
     // The Si4463 library handles the length and the data.
     if (Si446x_TX(&radioBuffer, len, _channel, SI446X_STATE_RX))
     {
         LOG_DEBUG("Si446x: Sending packet (len=%d)", len);
-        return ErrorCode_NONE;
+        return ERRNO_OK;
     }
     else
     {
         LOG_ERROR("Si446x: Failed to start transmission");
-        return ErrorCode_RADIO_CONFIG_ERROR;
+        return ERRNO_UNKNOWN;
     }
 }
 
@@ -94,15 +96,16 @@ void Si446xInterface::handleRxComplete(uint8_t length, int16_t rssi)
 {
     LOG_DEBUG("Si446x: Packet received (len=%d, rssi=%d)", length, rssi);
     
-    if (length > sizeof(radioBuffer)) length = sizeof(radioBuffer);
+    // length is already uint8_t (max 255), and radioBuffer is 256 bytes, 
+    // so it will always fit.
     Si446x_read(&radioBuffer, length);
     
     // Convert to mesh packet
-    meshtastic_MeshPacket *p = allocMeshPacket();
+    meshtastic_MeshPacket *p = packetPool.allocZeroed();
     if (p)
     {
         p->rx_rssi = rssi;
-        p->rx_time = airTime->getRealTime();
+        p->rx_time = getTime();
         
         // In Meshtastic, the radioBuffer already contains the PacketHeader + Payload
         // due to how beginSending() works on the tx side.
@@ -125,7 +128,7 @@ void Si446xInterface::handleRxComplete(uint8_t length, int16_t rssi)
         }
         else
         {
-            freeMeshPacket(p);
+            packetPool.release(p);
         }
     }
 }
@@ -140,7 +143,7 @@ void Si446xInterface::handleSent()
     LOG_DEBUG("Si446x: Packet sent successfully");
     if (sendingPacket)
     {
-        freeMeshPacket(sendingPacket);
+        packetPool.release(sendingPacket);
         sendingPacket = nullptr;
     }
     // Return to RX
