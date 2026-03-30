@@ -1360,7 +1360,7 @@ void TFTDisplay::sendCommand(uint8_t com)
         unphone.backlight(true); // using unPhone library
 #endif
 #ifdef RAK14014
-#elif !defined(M5STACK) && !defined(ST7789_CS) && !defined(HACKADAY_COMMUNICATOR) && !defined(TROPICON2026) && !defined(TROPICON2026)&& !defined(TROPICON2026) && !defined(TROPICON2026) !defined(TROPICON2026) // T-Deck gets brightness set in Screen.cpp in the handleSetOn function
+#elif !defined(M5STACK) && !defined(ST7789_CS) && !defined(HACKADAY_COMMUNICATOR) && !defined(TROPICON2026) // T-Deck gets brightness set in Screen.cpp in the handleSetOn function
         tft->setBrightness(172);
 #endif
         break;
@@ -1402,7 +1402,7 @@ void TFTDisplay::setDisplayBrightness(uint8_t _brightness)
 {
 #ifdef RAK14014
     // todo
-#elif !defined(HACKADAY_COMMUNICATOR) && !defined(TROPICON2026) && !defined(TROPICON2026)&& !defined(TROPICON2026) && !defined(TROPICON2026) !defined(TROPICON2026)
+#elif !defined(HACKADAY_COMMUNICATOR) && !defined(TROPICON2026)
     tft->setBrightness(_brightness);
     LOG_DEBUG("Brightness is set to value: %i ", _brightness);
 #endif
