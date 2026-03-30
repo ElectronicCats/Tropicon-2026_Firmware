@@ -4,6 +4,8 @@
 // Firmware: Meshtastic / PlatformIO
 // ══════════════════════════════════════════════════════════════════════════════
 
+#define TROPICON2026
+
 // ── SX1262 LoRa — SPI Bus 1 ──────────────────────────────────────────────────
 #define USE_SX1262
 
@@ -51,11 +53,12 @@
 //   CSX         │ CS1         │ IO10         │ Chip Select (active low)
 //   RESX        │ RSTB        │ IO21         │ Reset (active low)
 //   TE          │ TE          │ IO13         │ Tearing Effect (frame sync)
+//   LED         │ LED         │ IO02         │ Backlight (PWM output)
 //
 // ── Display ER-TFT2.79-1 (controller: NV3007) — SPI Bus 2 (HSPI) ─────────────
 // Using Arduino_GFX with Arduino_NV3007 driver (same as hackaday-communicator)
 
-/*
+
 #define TFT_BL                  2    // IO02 = LCD_BRIGHT (PWM output)
 #define SPI_FREQUENCY           2000000
 #define SPI_READ_FREQUENCY      16000000
@@ -73,6 +76,7 @@
 // SPI pins for display (same naming as hackaday-communicator)
 #define TFT_DC                  9    // IO09 = D/CX (Data/Command select)
 #define TFT_CS                  10   // IO10 = CSX (Chip Select)
+#define TFT_RST                 21   // IO21 = RESX (Reset)
 
 // SPI bus configuration
 #define TFT_MOSI                11   // IO11 = SDA (SPI MOSI)
@@ -80,4 +84,3 @@
 
 #define USE_POWERSAVE
 #define SLEEP_TIME              120
-*/
