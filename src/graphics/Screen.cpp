@@ -40,6 +40,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "draw/UIRenderer.h"
 #include "modules/CannedMessageModule.h"
 
+#if defined(TROPICON2026)
+#include "draw/TalksRenderer.h"
+#endif
+
 #if !MESHTASTIC_EXCLUDE_GPS
 #include "GPS.h"
 #include "buzz.h"
@@ -1018,6 +1022,9 @@ void Screen::setScreensaverFrames(FrameCallback einkScreensaver)
 
 // Regenerate the normal set of frames, focusing a specific frame if requested
 // Called when a frame should be added / removed, or custom frames should be cleared
+// Regenerate the normal set of frames, focusing a specific frame if requested
+// Called when a frame should be added / removed, or custom frames should be cleared
+
 void Screen::setFrames(FrameFocus focus)
 {
     // Block setFrames calls when virtual keyboard is active to prevent overlay interference
@@ -1037,6 +1044,11 @@ void Screen::setFrames(FrameFocus focus)
     indicatorIcons.clear();
 
     size_t numframes = 0;
+#if defined(TROPICON2026)
+    fsi.positions.talks = numframes;
+    normalFrames[numframes++] = graphics::TalksRenderer::drawFrame;
+    indicatorIcons.push_back(icon_list); // Or a specific icon if available
+#endif
 
     // If we have a critical fault, show it first
     fsi.positions.fault = numframes;
@@ -1239,6 +1251,9 @@ void Screen::setFrames(FrameFocus focus)
         break;
     case FOCUS_SYSTEM:
         ui->switchToFrame(fsi.positions.system);
+        break;
+    case FOCUS_TALKS:
+        ui->switchToFrame(fsi.positions.talks);
         break;
 
     case FOCUS_PRESERVE:

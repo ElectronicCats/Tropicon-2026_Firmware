@@ -104,6 +104,10 @@
 #include "modules/StatusMessageModule.h"
 #endif
 
+#if defined(TROPICON2026)
+#include "modules/TalksModule.h"
+#endif
+
 #if defined(HAS_HARDWARE_WATCHDOG)
 #include "watchdog/watchdogThread.h"
 #endif
@@ -263,4 +267,8 @@ void setupModules()
     // NOTE! This module must be added LAST because it likes to check for replies from other modules and avoid sending extra
     // acks
     routingModule = new RoutingModule();
+
+#if defined(TROPICON2026)
+    new TalksModule();
+#endif
 }

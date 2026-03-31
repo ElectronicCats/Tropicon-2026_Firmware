@@ -1,0 +1,63 @@
+#pragma once
+#if defined(TROPICON2026)
+#include "MeshModule.h"
+#include "FSCommon.h"
+#include "input/InputBroker.h"
+#include <vector>
+#include <string>
+#include <iostream>
+
+using namespace std;
+
+struct Talk {
+    string id;
+    string day;
+    string time;
+    string stage;
+    string title;
+    string speaker;
+    string image;
+    string description;
+    int interest; // 0: None, 1: Asistir, 2: Tal vez, 3: Saltar
+};
+
+class TalksModule : public MeshModule {
+public:
+    TalksModule();
+    virtual ~TalksModule();
+
+    void loadSchedule();
+    void loadInterests();
+    void saveInterest(const string& talkId, int state);
+    
+    const vector<Talk>& getTalks() const { return talks; }
+    
+    // UI state
+    int currentDayIndex = 0;
+    int currentStageIndex = 0;
+    int currentTalkIndex = 0;
+    bool inDetailView = false;
+
+    vector<string> getDays();
+    vector<string> getStages(const string& day);
+    vector<int> getFilteredTalkIndices(const string& day, const string& stage);
+
+    // Input handling
+    int handleInputEvent(const InputEvent *event);
+
+    // MeshModule requirement
+    virtual bool wantPacket(const meshtastic_MeshPacket *p) override { return false; }
+
+private:
+    vector<Talk> talks;
+    void parseCSVLine(const string& line);
+
+    // Observer for input
+    CallbackObserver<TalksModule, const InputEvent *> inputObserver =
+        CallbackObserver<TalksModule, const InputEvent *>(this, &TalksModule::handleInputEvent);
+};
+
+extern TalksModule *talksModule;
+
+
+#endif

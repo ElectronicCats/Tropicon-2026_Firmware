@@ -63,6 +63,14 @@ uint32_t menuHandler::pickedNodeNum = 0;
 bool test_enabled = false;
 uint8_t test_count = 0;
 
+#if defined(TROPICON2026)
+void menuHandler::talksMenu()
+{
+    screen->setFrames(graphics::Screen::FOCUS_TALKS);
+    LOG_INFO("Switched to Talks menu");
+}
+#endif
+
 void menuHandler::loraMenu()
 {
     static const char *optionsArray[] = {"Back", "Device Role", "Radio Preset", "Frequency Slot", "LoRa Region"};
@@ -921,7 +929,7 @@ void menuHandler::messageViewModeMenu()
 
 void menuHandler::homeBaseMenu()
 {
-    enum optionsNumbers { Back, Mute, Backlight, Position, Preset, Freetext, Sleep, enumEnd };
+    enum optionsNumbers { Back, Mute, Backlight, Position, Preset, Freetext, Sleep, Talks, enumEnd };
 
     static const char *optionsArray[enumEnd] = {"Back"};
     static int optionsEnumArray[enumEnd] = {Back};
@@ -949,6 +957,10 @@ void menuHandler::homeBaseMenu()
         optionsArray[options] = "Send Node Info";
     }
     optionsEnumArray[options++] = Position;
+#if defined(TROPICON2026)
+    optionsArray[options] = "Talks";
+    optionsEnumArray[options++] = Talks;
+#endif
 
     BannerOverlayOptions bannerOptions;
     bannerOptions.message = "Home Action";
@@ -2638,6 +2650,9 @@ void menuHandler::handleMenuSwitch(OLEDDisplay *display)
         test_count = 0;
     switch (menuQueue) {
     case MenuNone:
+        break;
+    case TalksMenu:
+        talksMenu();
         break;
     case LoraMenu:
         loraMenu();
