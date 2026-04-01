@@ -5,19 +5,25 @@
 #include <algorithm>
 #include <set>
 #include "graphics/Screen.h"
-#include <iostream>
-
-using namespace std;
 
 extern graphics::Screen *screen;
 
 TalksModule *talksModule = nullptr;
 
-TalksModule::TalksModule() : MeshModule("Talks") {
+TalksModule::TalksModule() : MeshModule("Talks"), concurrency::OSThread("TalksModule") {
     talksModule = this;
     loadSchedule();
     loadInterests();
-    inputObserver.observe(inputBroker);
+    
+    // Registrar observer de input CORRECTAMENTE
+    if (inputBroker) {
+        inputObserver.observe(inputBroker);
+        LOG_INFO("TalksModule: Input observer registered");
+    } else {
+        LOG_ERROR("TalksModule: inputBroker not available");
+    }
+    
+    setIntervalFromNow(1000);
 }
 
 TalksModule::~TalksModule() {
@@ -101,18 +107,29 @@ void TalksModule::saveInterest(const string& talkId, int state) {
         }
     }
     
-    // Simple persistence: rewrite the file
-    File file = FSCom.open("/talks_int.dat", FILE_O_WRITE);
-    if (!file) return;
-    
-    for (const auto& t : talks) {
-        if (t.interest != 0) {
-            file.print(t.id.c_str());
-            file.print("$");
-            file.println(t.interest);
+    // Mark as dirty and schedule flash write
+    isDirty = true;
+    lastInteractionMs = millis();
+}
+
+int32_t TalksModule::runOnce() {
+    if (isDirty && millis() - lastInteractionMs > 5000) {
+        // Simple persistence: rewrite the file
+        File file = FSCom.open("/talks_int.dat", FILE_O_WRITE);
+        if (file) {
+            for (const auto& t : talks) {
+                if (t.interest != 0) {
+                    file.print(t.id.c_str());
+                    file.print("$");
+                    file.println(t.interest);
+                }
+            }
+            file.close();
         }
+        isDirty = false;
+        LOG_INFO("TalksModule: Saved interests to flash");
     }
-    file.close();
+    return 1000; // Run again in 1 second
 }
 
 vector<string> TalksModule::getDays() {
@@ -143,63 +160,110 @@ vector<int> TalksModule::getFilteredTalkIndices(const string& day, const string&
     return indices;
 }
 
-int TalksModule::handleInputEvent(const InputEvent *event) {
-    if (!screen->isScreenOn() || screen->isOverlayBannerShowing())
-        return 0;
+int TalksModule::handleInputEvent(const InputEvent *event)
+{
+    // Guards
+    if (!screen || !screen->isScreenOn()) return 0;
+    if (screen->getCurrentFrame() != graphics::Screen::FOCUS_TALKS) return 0;
+    if (screen->isOverlayBannerShowing()) return 0;
 
-    // Only handle input if our frame is focused
-    if (!isRequestingFocus())
-        return 0;
+    LOG_DEBUG("TalksModule input: %d", event->inputEvent);
 
+    // ── Pre-compute context defensively ──────────────────────────────────────
+    auto days    = getDays();
+    int  numDays = (int)days.size();
+    if (numDays == 0) return 0;
+    if (currentDayIndex >= numDays) currentDayIndex = 0;
+
+    auto stages    = getStages(days[currentDayIndex]);
+    int  numStages = (int)stages.size();
+    if (numStages == 0) return 0;
+    if (currentStageIndex >= numStages) currentStageIndex = 0;
+
+    auto talkIndices = getFilteredTalkIndices(days[currentDayIndex], stages[currentStageIndex]);
+    int  numTalks    = (int)talkIndices.size();
+
+    // ── UP: charla anterior ───────────────────────────────────────────────────
     if (event->inputEvent == INPUT_BROKER_UP) {
-        if (inDetailView) {
-            // Scroll description maybe?
-        } else {
+        if (!inDetailView) {
             if (currentTalkIndex > 0) currentTalkIndex--;
         }
         screen->runNow();
         return 1;
-    } else if (event->inputEvent == INPUT_BROKER_DOWN) {
-        if (inDetailView) {
-            // Scroll description
-        } else {
-            auto days = getDays();
-            if (currentDayIndex < (int)days.size()) {
-                auto stages = getStages(days[currentDayIndex]);
-                if (currentStageIndex < (int)stages.size()) {
-                    auto talkIndices = getFilteredTalkIndices(days[currentDayIndex], stages[currentStageIndex]);
-                    if (currentTalkIndex < (int)talkIndices.size() - 1) currentTalkIndex++;
-                }
-            }
+    }
+
+    // ── DOWN: charla siguiente ────────────────────────────────────────────────
+    if (event->inputEvent == INPUT_BROKER_DOWN) {
+        if (!inDetailView) {
+            if (currentTalkIndex < numTalks - 1) currentTalkIndex++;
         }
         screen->runNow();
         return 1;
-    } else if (event->inputEvent == INPUT_BROKER_SELECT) {
+    }
+
+    // ── LEFT: día anterior (cicla) ────────────────────────────────────────────
+    if (event->inputEvent == INPUT_BROKER_LEFT) {
+        if (!inDetailView) {
+            currentDayIndex = (currentDayIndex - 1 + numDays) % numDays;
+            auto newStages = getStages(days[currentDayIndex]);
+            if (currentStageIndex >= (int)newStages.size()) currentStageIndex = 0;
+            currentTalkIndex = 0;
+        }
+        screen->runNow();
+        return 1;
+    }
+
+    // ── RIGHT: día siguiente / stage siguiente ────────────────────────────────
+    if (event->inputEvent == INPUT_BROKER_RIGHT) {
+        if (!inDetailView) {
+            // Primero intenta avanzar el stage; si ya es el último, avanza el día
+            if (numStages > 1 && currentStageIndex < numStages - 1) {
+                currentStageIndex++;
+            } else {
+                currentDayIndex  = (currentDayIndex + 1) % numDays;
+                currentStageIndex = 0;
+            }
+            currentTalkIndex = 0;
+        }
+        screen->runNow();
+        return 1;
+    }
+
+    // ── SELECT: entrar al detalle / ciclar interés ────────────────────────────
+    if (event->inputEvent == INPUT_BROKER_SELECT) {
         if (inDetailView) {
-            // Change interest
-            auto days = getDays();
-            auto stages = getStages(days[currentDayIndex]);
-            auto talkIndices = getFilteredTalkIndices(days[currentDayIndex], stages[currentStageIndex]);
-            if (currentTalkIndex < (int)talkIndices.size()) {
+            if (numTalks > 0 && currentTalkIndex < numTalks) {
                 int idx = talkIndices[currentTalkIndex];
-                int nextInterest = (talks[idx].interest + 1) % 4;
-                saveInterest(talks[idx].id, nextInterest);
+                saveInterest(talks[idx].id, (talks[idx].interest + 1) % 4);
             }
         } else {
-            inDetailView = true;
+            if (numTalks > 0) inDetailView = true;
         }
         screen->runNow();
         return 1;
-    } else if (event->inputEvent == INPUT_BROKER_BACK) {
+    }
+
+    // ── BACK / CANCEL: salir del detalle o del módulo ─────────────────────────
+    if (event->inputEvent == INPUT_BROKER_BACK ||
+        event->inputEvent == INPUT_BROKER_CANCEL) {
         if (inDetailView) {
             inDetailView = false;
         } else {
-            // Exit talks module
             screen->setFrames(graphics::Screen::FOCUS_DEFAULT);
         }
         screen->runNow();
         return 1;
     }
+
+    // ── SELECT_LONG: salir al frame principal desde cualquier nivel ───────────
+    if (event->inputEvent == INPUT_BROKER_SELECT_LONG) {
+        inDetailView = false;
+        screen->setFrames(graphics::Screen::FOCUS_DEFAULT);
+        screen->runNow();
+        return 1;
+    }
+
+    // Cualquier otro evento (USER_PRESS, etc.) se pasa al sistema estándar
     return 0;
 }
 

@@ -3,9 +3,9 @@
 #include "MeshModule.h"
 #include "FSCommon.h"
 #include "input/InputBroker.h"
+#include "concurrency/OSThread.h"
 #include <vector>
 #include <string>
-#include <iostream>
 
 using namespace std;
 
@@ -21,7 +21,7 @@ struct Talk {
     int interest; // 0: None, 1: Asistir, 2: Tal vez, 3: Saltar
 };
 
-class TalksModule : public MeshModule {
+class TalksModule : public MeshModule, private concurrency::OSThread {
 public:
     TalksModule();
     virtual ~TalksModule();
@@ -45,11 +45,17 @@ public:
     // Input handling
     int handleInputEvent(const InputEvent *event);
 
+    // Periodic tasks
+    virtual int32_t runOnce() override;
+
     // MeshModule requirement
     virtual bool wantPacket(const meshtastic_MeshPacket *p) override { return false; }
 
 private:
     vector<Talk> talks;
+    bool isDirty = false;
+    uint32_t lastInteractionMs = 0;
+    
     void parseCSVLine(const string& line);
 
     // Observer for input

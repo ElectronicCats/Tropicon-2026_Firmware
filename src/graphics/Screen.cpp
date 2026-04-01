@@ -1253,7 +1253,16 @@ void Screen::setFrames(FrameFocus focus)
         ui->switchToFrame(fsi.positions.system);
         break;
     case FOCUS_TALKS:
-        ui->switchToFrame(fsi.positions.talks);
+        if (fsi.positions.talks < numframes)
+        {
+            ui->switchToFrame(fsi.positions.talks);
+            LOG_DEBUG("Switched to Talks frame at position %d", fsi.positions.talks);
+        }
+        else
+        {
+            LOG_WARN("Talks frame not found in frameset");
+            ui->switchToFrame(0); // Fallback to first frame
+        }
         break;
 
     case FOCUS_PRESERVE:

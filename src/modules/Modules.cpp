@@ -268,7 +268,8 @@ void setupModules()
     // acks
     routingModule = new RoutingModule();
 
-#if defined(TROPICON2026)
-    new TalksModule();
+#ifdef TROPICON2026
+    talksModule = new TalksModule();
+    LOG_INFO("TalksModule initialized");
 #endif
 }

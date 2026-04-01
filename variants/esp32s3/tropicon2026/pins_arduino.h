@@ -23,7 +23,4 @@
 #define MISO  LORA_MISO
 #define SCK   LORA_SCK
 
-// ── LED  — Integrated Led ───────────────────────────────────────────────────
-#define LED_BUILTIN  48
-
 #endif /* Pins_Arduino_h */

@@ -243,6 +243,19 @@ class Screen : public concurrency::OSThread
     // Call when a frame should be added / removed, or custom frames should be cleared
     void setFrames(FrameFocus focus = FOCUS_DEFAULT);
 
+    FrameFocus getCurrentFrame() const {
+        if (ui && ui->getUiState())
+        {
+            uint8_t currentFrameIndex = ui->getUiState()->currentFrame;
+            // Mapear el índice al FrameFocus correspondiente
+            if (currentFrameIndex == framesetInfo.positions.talks)
+            {
+                return FOCUS_TALKS;
+            }
+        }
+        return FOCUS_DEFAULT;
+    }
+
     std::vector<const uint8_t *> indicatorIcons; // Per-frame custom icon pointers
     Screen(const Screen &) = delete;
     Screen &operator=(const Screen &) = delete;
@@ -345,7 +358,7 @@ class Screen : public concurrency::OSThread
     void setEndCalibration(uint32_t _endCalibrationAt) { endCalibrationAt = _endCalibrationAt; }
     uint32_t getEndCalibration() { return endCalibrationAt; }
 
-    // functions for display brightness
+    // std::functions for display brightness
     void increaseBrightness();
     void decreaseBrightness();
 

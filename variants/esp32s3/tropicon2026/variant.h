@@ -4,10 +4,14 @@
 // Firmware: Meshtastic / PlatformIO
 // ══════════════════════════════════════════════════════════════════════════════
 
+#ifndef TROPICON2026
 #define TROPICON2026
+#endif
 
 // ── SX1262 LoRa — SPI Bus 1 ──────────────────────────────────────────────────
+#ifndef USE_SX1262
 #define USE_SX1262
+#endif
 
 // SPI Bus Pins
 #define LORA_SCK       37   // IO37
@@ -84,3 +88,27 @@
 
 #define USE_POWERSAVE
 #define SLEEP_TIME              120
+
+// ── Navigation Buttons ────────────────────────────────────────────────────────
+// Primary button (IO40): single-press = advance frame, long-press = open menu,
+// long-long press = shutdown. Handled automatically by Meshtastic ButtonThread.
+#define BUTTON_PIN              40   // IO40 = UP button (primary Meshtastic button)
+#define BUTTON_ACTIVE_LOW       true
+#define BUTTON_ACTIVE_PULLUP    true
+
+// Directional pad — 4 buttons routed through TrackballInterruptImpl1.
+// This reuses the existing Meshtastic trackball driver, which emits:
+//   INPUT_BROKER_UP / DOWN / LEFT / RIGHT / SELECT / SELECT_LONG
+// directly into InputBroker — no custom code needed.
+//
+// ⚠ IO43 is UART0 TX. It floats HIGH during boot (bootloader uses it).
+//   Do not use INPUT_PULLUP on this pin; add a 10 kΩ pull-down on the PCB.
+#define HAS_TRACKBALL 1
+#define TB_UP      40   // IO40 — same pin as BUTTON_PIN → UP / advance
+#define TB_DOWN    43   // IO43 — UART TX (pull-down on PCB required)
+#define TB_LEFT     1   // IO01 — LEFT
+#define TB_RIGHT   18   // IO18 — RIGHT
+#define TB_PRESS   40   // IO40 long-press → SELECT (handled by ButtonThread)
+
+// Trackball interrupt edge: directional buttons trigger on FALLING (active-low)
+#define TB_DIRECTION FALLING

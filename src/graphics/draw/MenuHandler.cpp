@@ -66,8 +66,15 @@ uint8_t test_count = 0;
 #if defined(TROPICON2026)
 void menuHandler::talksMenu()
 {
-    screen->setFrames(graphics::Screen::FOCUS_TALKS);
-    LOG_INFO("Switched to Talks menu");
+    if (screen) {
+        screen->setFrames(graphics::Screen::FOCUS_TALKS);
+        LOG_INFO("Switched to Talks menu");
+        
+        // Forzar actualización inmediata
+        screen->runNow();
+    } else {
+        LOG_ERROR("Screen not initialized for Talks menu");
+    }
 }
 #endif
 
@@ -1006,10 +1013,13 @@ void menuHandler::homeBaseMenu()
             } else {
                 IF_SCREEN(screen->showSimpleBanner("Node Info\nSent", 3000));
             }
-        } else if (selected == Preset) {
-            cannedMessageModule->LaunchWithDestination(NODENUM_BROADCAST);
         } else if (selected == Freetext) {
             cannedMessageModule->LaunchFreetextWithDestination(NODENUM_BROADCAST);
+#if defined(TROPICON2026)
+        } else if (selected == Talks) {
+            menuHandler::menuQueue = menuHandler::TalksMenu;
+            screen->runNow();
+#endif
         }
     };
     screen->showOverlayBanner(bannerOptions);
