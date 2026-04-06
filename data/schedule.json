@@ -1,0 +1,212 @@
+[
+  {
+    "Día": "Viernes",
+    "Horario": "09:00 hrs",
+    "Track 1": "Registro",
+    "Ponente": "",
+    "ImagenTrack1": "",
+    "Track Villas": "",
+    "Ponente.1": "",
+    "ImagenVillas": ""
+  },
+  {
+    "Día": "Viernes",
+    "Horario": "09:00 - 09:50 hrs",
+    "Track 1": "Coffee Break",
+    "Ponente": "",
+    "ImagenTrack1": "",
+    "Track Villas": "",
+    "Ponente.1": "",
+    "ImagenVillas": ""
+  },
+  {
+    "Día": "Viernes",
+    "Horario": "09:45 - 10:00 hrs",
+    "Track 1": "Inauguración",
+    "Ponente": "",
+    "ImagenTrack1": "",
+    "Track Villas": "",
+    "Ponente.1": "",
+    "ImagenVillas": ""
+  },
+  {
+    "Día": "Viernes",
+    "Horario": "10:00 - 10:50 hrs",
+    "Track 1": "TBD",
+    "Ponente": "NahamSec",
+    "ImagenTrack1": "data/img/Nahamsec.png",
+    "Track Villas": "",
+    "Ponente.1": "",
+    "ImagenVillas": ""
+  },
+  {
+    "Día": "Viernes",
+    "Horario": "11:00 - 11:50 hrs",
+    "Track 1": "AppSec 3.0: Reinventando la seguridad en aplicaciones en la era de la IA",
+    "Ponente": "Bryan Díaz",
+    "ImagenTrack1": "data/img/BryanDiaz.png",
+    "Track Villas": "TBD",
+    "Ponente.1": "RF Village",
+    "ImagenVillas": "data/img/RFVillage.png"
+  },
+  {
+    "Día": "Viernes",
+    "Horario": "12:00 - 12:50 hrs",
+    "Track 1": "Hacking a mano, fallos que la IA no puede replicar (aún)",
+    "Ponente": "Omar Espino",
+    "ImagenTrack1": "data/img/OmarEspino.png",
+    "Track Villas": "DMA para principiantes",
+    "Ponente.1": "Payment Village",
+    "ImagenVillas": "data/img/PaymentVillage.png"
+  },
+  {
+    "Día": "Viernes",
+    "Horario": "13:00 - 13:50 hrs",
+    "Track 1": "TBD",
+    "Ponente": "Checkmarx",
+    "ImagenTrack1": "data/img/checkmarx.png",
+    "Track Villas": "TBD",
+    "Ponente.1": "Eduardo Vela",
+    "ImagenVillas": "data/img/EduardoVela.png"
+  },
+  {
+    "Día": "Viernes",
+    "Horario": "14:00 - 15:00 hrs",
+    "Track 1": "Break",
+    "Ponente": "",
+    "ImagenTrack1": "",
+    "Track Villas": "Break",
+    "Ponente.1": "",
+    "ImagenVillas": ""
+  },
+  {
+    "Día": "Viernes",
+    "Horario": "15:00 - 15:50 hrs",
+    "Track 1": "Mesas Redonda: CISOs vs. Hackers",
+    "Ponente": "",
+    "ImagenTrack1": "",
+    "Track Villas": "Windows Internals en ATMs: Kernel, Protecciones y Lógicas de Negocio",
+    "Ponente.1": "Arnold Jared Morales Yepez",
+    "ImagenVillas": "data/img/PaymentVillage.png"
+  },
+  {
+    "Día": "Viernes",
+    "Horario": "16:00 - 16:50 hrs",
+    "Track 1": "Defendiendo Google sin usar muros",
+    "Ponente": "Eduardo Vela",
+    "ImagenTrack1": "data/img/EduardoVela.png",
+    "Track Villas": "",
+    "Ponente.1": "",
+    "ImagenVillas": ""
+  },
+  {
+    "Día": "Viernes",
+    "Horario": "20:30 - 00:00 hrs",
+    "Track 1": "Elite Party Hemingway",
+    "Ponente": "",
+    "ImagenTrack1": "",
+    "Track Villas": "",
+    "Ponente.1": "",
+    "ImagenVillas": ""
+  },
+  {
+    "Día": "Sábado",
+    "Horario": "10:00 hrs",
+    "Track 1": "Registro",
+    "Ponente": "",
+    "ImagenTrack1": "",
+    "Track Villas": "",
+    "Ponente.1": "",
+    "ImagenVillas": ""
+  },
+  {
+    "Día": "Sábado",
+    "Horario": "10:30 - 10:50 hrs",
+    "Track 1": "Coffee Break",
+    "Ponente": "",
+    "ImagenTrack1": "",
+    "Track Villas": "",
+    "Ponente.1": "",
+    "ImagenVillas": ""
+  },
+  {
+    "Día": "Sábado",
+    "Horario": "11:00 - 11:50 hrs",
+    "Track 1": "Cómo hackearán a tu familia 2: Estafas de siempre, engaños de hoy",
+    "Ponente": "Héctor Pardiñas(Chiche)",
+    "ImagenTrack1": "",
+    "Track Villas": "",
+    "Ponente.1": "",
+    "ImagenVillas": ""
+  },
+  {
+    "Día": "Sábado",
+    "Horario": "12:00 - 12:50 hrs",
+    "Track 1": "El fin de la confianza: Cómo la IA automatiza el engaño",
+    "Ponente": "DragonJar",
+    "ImagenTrack1": "data/img/dragonjar.png",
+    "Track Villas": "TBD",
+    "Ponente.1": "NahamSec",
+    "ImagenVillas": "data/img/Nahamsec.png"
+  },
+  {
+    "Día": "Sábado",
+    "Horario": "13:00 - 13:50 hrs",
+    "Track 1": "TBD",
+    "Ponente": "",
+    "ImagenTrack1": "",
+    "Track Villas": "TBD - Bounty Village",
+    "Ponente.1": "",
+    "ImagenVillas": ""
+  },
+  {
+    "Día": "Sábado",
+    "Horario": "14:00 - 15:00 hrs",
+    "Track 1": "Break",
+    "Ponente": "",
+    "ImagenTrack1": "",
+    "Track Villas": "Break",
+    "Ponente.1": "",
+    "ImagenVillas": ""
+  },
+  {
+    "Día": "Sábado",
+    "Horario": "15:00 - 15:50 hrs",
+    "Track 1": "Mesa Redonda: Comunidades de Seguridad",
+    "Ponente": "",
+    "ImagenTrack1": "",
+    "Track Villas": "TBD",
+    "Ponente.1": "RF Village",
+    "ImagenVillas": "data/img/RFVillage.png"
+  },
+  {
+    "Día": "Sábado",
+    "Horario": "16:00 - 16:50 hrs",
+    "Track 1": "Después del leak: Convirtiendo la negación en investigación",
+    "Ponente": "Ignacio Gómez Villaseñor",
+    "ImagenTrack1": "",
+    "Track Villas": "TBD",
+    "Ponente.1": "Payment Village",
+    "ImagenVillas": "data/img/PaymentVillage.png"
+  },
+  {
+    "Día": "Sábado",
+    "Horario": "17:00 - 17:50 hrs",
+    "Track 1": "Reverse Engineering a Ledger Nano X Hardware Implant",
+    "Ponente": "Joe Grand",
+    "ImagenTrack1": "data/img/JoeGrand.png",
+    "Track Villas": "",
+    "Ponente.1": "",
+    "ImagenVillas": ""
+  },
+  {
+    "Día": "Sábado",
+    "Horario": "18:00 - 18:15 hrs",
+    "Track 1": "Clausura",
+    "Ponente": "",
+    "ImagenTrack1": "",
+    "Track Villas": "",
+    "Ponente.1": "",
+    "ImagenVillas": ""
+  }
+]

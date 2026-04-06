@@ -1,0 +1,156 @@
+[
+  {
+    "Día": "Viernes",
+    "Horario": "9:00 - 9:50 hrs",
+    "Expo Villas: Salón Coral": "Expo Villas",
+    "Taller #1: Salón Maya": { "Taller": "", "Tallerista": "", "ImgTaller1": "" },
+    "Taller #2: Salón la Isla": { "Taller": "", "Tallerista": "", "ImgTaller2": "" },
+    "Taller #3: Suite 1": { "Taller": "", "Tallerista": "", "ImgTaller3": "" },
+    "Taller #4: Suite 2": { "Taller": "", "Tallerista": "", "ImgTaller4": "" }
+  },
+  {
+    "Día": "Viernes",
+    "Horario": "9:45 - 10:00 hrs",
+    "Expo Villas: Salón Coral": "Expo Villas",
+    "Taller #1: Salón Maya": { "Taller": "", "Tallerista": "", "ImgTaller1": "" },
+    "Taller #2: Salón la Isla": { "Taller": "", "Tallerista": "", "ImgTaller2": "" },
+    "Taller #3: Suite 1": { "Taller": "", "Tallerista": "", "ImgTaller3": "" },
+    "Taller #4: Suite 2": { "Taller": "", "Tallerista": "", "ImgTaller4": "" }
+  },
+  {
+    "Día": "Viernes",
+    "Horario": "10:00 - 10:50 hrs",
+    "Expo Villas: Salón Coral": "Expo Villas",
+    "Taller #1: Salón Maya": { "Taller": "", "Tallerista": "", "ImgTaller1": "" },
+    "Taller #2: Salón la Isla": { "Taller": "", "Tallerista": "", "ImgTaller2": "" },
+    "Taller #3: Suite 1": { "Taller": "", "Tallerista": "", "ImgTaller3": "" },
+    "Taller #4: Suite 2": { "Taller": "", "Tallerista": "", "ImgTaller4": "" }
+  },
+  {
+    "Día": "Viernes",
+    "Horario": "11:00 - 13:50 hrs",
+    "Expo Villas: Salón Coral": "Expo Villas",
+    "Taller #1: Salón Maya": {
+      "Taller": "Top 10 LLM OWASP",
+      "Tallerista": "Jean Granados",
+      "ImgTaller1": "data/img/JeanPaul.png"
+    },
+    "Taller #2: Salón la Isla": {
+      "Taller": "Ingeniería de Detección Moderna Para Ciberdefensores",
+      "Tallerista": "David Michelena",
+      "ImgTaller2": "data/img/DavidBernal.png"
+    },
+    "Taller #3: Suite 1": {
+      "Taller": "Introducción a la Explotación de Binarios Windows x86",
+      "Tallerista": "Angel Gangas",
+      "ImgTaller3": "data/img/AngelGangas.png"
+    },
+    "Taller #4: Suite 2": {
+      "Taller": "Advanced Web Hacking",
+      "Tallerista": "Marco Almanguer",
+      "ImgTaller4": "data/img/MarcoAlmaguer.png"
+    }
+  },
+  {
+    "Día": "Viernes",
+    "Horario": "14:00 - 15:50 hrs",
+    "Expo Villas: Salón Coral": "Expo Villas",
+    "Taller #1: Salón Maya": {
+      "Taller": "OSINT",
+      "Tallerista": "Omar Espino",
+      "ImgTaller1": "data/img/OmarEspino.png"
+    },
+    "Taller #2: Salón la Isla": {
+      "Taller": "Ingeniería de Detección Moderna Para Ciberdefensores",
+      "Tallerista": "David Michelena",
+      "ImgTaller2": "data/img/DavidBernal.png"
+    },
+    "Taller #3: Suite 1": {
+      "Taller": "Introducción a la Explotación de Binarios Windows x86",
+      "Tallerista": "Angel Gangas",
+      "ImgTaller3": "data/img/AngelGangas.png"
+    },
+    "Taller #4: Suite 2": {
+      "Taller": "Advanced Web Hacking",
+      "Tallerista": "Marco Almanguer",
+      "ImgTaller4": "data/img/MarcoAlmaguer.png"
+    }
+  },
+  {
+    "Día": "Sábado",
+    "Horario": "10:30 - 11:50 hrs",
+    "Expo Villas: Salón Coral": "Expo Villas",
+    "Taller #1: Salón Maya": { "Taller": "", "Tallerista": "", "ImgTaller1": "" },
+    "Taller #2: Salón la Isla": { "Taller": "", "Tallerista": "", "ImgTaller2": "" },
+    "Taller #3: Suite 1": { "Taller": "", "Tallerista": "", "ImgTaller3": "" },
+    "Taller #4: Suite 2": { "Taller": "", "Tallerista": "", "ImgTaller4": "" }
+  },
+  {
+    "Día": "Sábado",
+    "Horario": "12:00 - 15:00 hrs",
+    "Expo Villas: Salón Coral": "Expo Villas",
+    "Taller #1: Salón Maya": {
+      "Taller": "Top 10 LLM OWASP",
+      "Tallerista": "Jean Granados",
+      "ImgTaller1": "data/img/JeanPaul.png"
+    },
+    "Taller #2: Salón la Isla": {
+      "Taller": "Ingeniería de Detección Moderna Para Ciberdefensores",
+      "Tallerista": "David Michelena",
+      "ImgTaller2": "data/img/DavidBernal.png"
+    },
+    "Taller #3: Suite 1": {
+      "Taller": "Introducción a la Explotación de Binarios Windows x86",
+      "Tallerista": "Angel Gangas",
+      "ImgTaller3": "data/img/AngelGangas.png"
+    },
+    "Taller #4: Suite 2": {
+      "Taller": "Flipper Zero Hacking 101",
+      "Tallerista": "Mariano Marino",
+      "ImgTaller4": "data/img/MarcoAlmaguer.png"
+    }
+  },
+  {
+    "Día": "Sábado",
+    "Horario": "15:00 - 15:50 hrs",
+    "Expo Villas: Salón Coral": "Expo Villas",
+    "Taller #1: Salón Maya": {
+      "Taller": "OSINT",
+      "Tallerista": "Omar Espino",
+      "ImgTaller1": "data/img/OmarEspino.png"
+    },
+    "Taller #2: Salón la Isla": {
+      "Taller": "Ingeniería de Detección Moderna Para Ciberdefensores",
+      "Tallerista": "David Michelena",
+      "ImgTaller2": "data/img/DavidBernal.png"
+    },
+    "Taller #3: Suite 1": {
+      "Taller": "Introducción a la Explotación de Binarios Windows x86",
+      "Tallerista": "Angel Gangas",
+      "ImgTaller3": "data/img/AngelGangas.png"
+    },
+    "Taller #4: Suite 2": { "Taller": "", "Tallerista": "", "ImgTaller4": "" }
+  },
+  {
+    "Día": "Sábado",
+    "Horario": "16:00 - 16:50 hrs",
+    "Expo Villas: Salón Coral": "Expo Villas",
+    "Taller #1: Salón Maya": {
+      "Taller": "OSINT",
+      "Tallerista": "Omar Espino",
+      "ImgTaller1": "data/img/OmarEspino.png"
+    },
+    "Taller #2: Salón la Isla": { "Taller": "", "Tallerista": "", "ImgTaller2": "" },
+    "Taller #3: Suite 1": { "Taller": "", "Tallerista": "", "ImgTaller3": "" },
+    "Taller #4: Suite 2": { "Taller": "", "Tallerista": "", "ImgTaller4": "" }
+  },
+  {
+    "Día": "Sábado",
+    "Horario": "17:00 - 18:15 hrs",
+    "Expo Villas: Salón Coral": "Expo Villas",
+    "Taller #1: Salón Maya": { "Taller": "", "Tallerista": "", "ImgTaller1": "" },
+    "Taller #2: Salón la Isla": { "Taller": "", "Tallerista": "", "ImgTaller2": "" },
+    "Taller #3: Suite 1": { "Taller": "", "Tallerista": "", "ImgTaller3": "" },
+    "Taller #4: Suite 2": { "Taller": "", "Tallerista": "", "ImgTaller4": "" }
+  }
+]
