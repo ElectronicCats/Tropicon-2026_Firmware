@@ -1,0 +1,22 @@
+Día,Horario,Track 1,Ponente,ImagenTrack1, Track Villas,Ponente, ImagenVillas
+Viernes,09:00 hrs,Registro,,,,,
+Viernes,09:00 - 09:50 hrs,Coffee Break,,,,,
+Viernes,09:45 - 10:00 hrs,Inauguración,,,,,
+Viernes,10:00 - 10:50 hrs,TBD,NahamSec,"data/img/Nahamsec.png", ,, 
+Viernes,11:00 - 11:50 hrs,AppSec 3.0: Reinventando la seguridad en aplicaciones en la era de la IA,Bryan Díaz,"data/img/BryanDiaz.png",TBD,RF Village," data/img/RFVillage.png"
+Viernes,12:00 - 12:50 hrs,"Hacking a mano, fallos que la IA no puede replicar (aún)",Omar Espino,"data/img/OmarEspino.png",DMA para principiantes,Payment Village,"data/img/PaymentVillage.png"
+Viernes,13:00 - 13:50 hrs,TBD,Checkmarx,"data/img/checkmarx.png",TBD,Eduardo Vela,"data/img/EduardoVela.png"
+Viernes,14:00 - 15:00 hrs,Break,,,Break,, 
+Viernes,15:00 - 15:50 hrs,Mesas Redonda: CISOs vs. Hackers,,,"Windows Internals en ATMs: Kernel, Protecciones y Lógicas de Negocio",Arnold Jared Morales Yepez,"data/img/PaymentVillage.png"
+Viernes,16:00 - 16:50 hrs,Defendiendo Google sin usar muros,Eduardo Vela,"data/img/EduardoVela.png",,,
+Viernes,20:30 - 00:00 hrs,Elite Party Hemingway,,,,,
+Sábado,10:00 hrs,Registro,,,,,
+Sábado,10:30 - 10:50 hrs,Coffee Break,,,,,
+Sábado,11:00 - 11:50 hrs,"Cómo hackearán a tu familia 2: Estafas de siempre, engaños de hoy",Héctor Pardiñas(Chiche),,,, 
+Sábado,12:00 - 12:50 hrs,"El fin de la confianza: Cómo la IA automatiza el engaño",DragonJar,"data/img/dragonjar.png",TBD,NahamSec,"data/img/Nahamsec.png"
+Sábado,13:00 - 13:50 hrs, TBD,,TBD - Bounty Village,,,
+Sábado,14:00 - 15:00 hrs, Break,,Break,,,
+Sábado,15:00 - 15:50 hrs, Mesa Redonda: Comunidades de Seguridad,,,TBD,RF Village,"data/img/RFVillage.png"
+Sábado,16:00 - 16:50 hrs, Después del leak: Convirtiendo la negación en investigación,Ignacio Gómez Villaseñor,,TBD,Payment Village,"data/img/PaymentVillage.png"
+Sábado,17:00 - 17:50 hrs, Reverse Engineering a Ledger Nano X Hardware Implant,Joe Grand,"data/img/JoeGrand.png",,,
+Sábado,18:00 - 18:15 hrs, Clausura,,,,,
