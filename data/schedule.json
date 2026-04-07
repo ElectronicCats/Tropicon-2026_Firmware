@@ -45,9 +45,9 @@
     "Track 1": "AppSec 3.0: Reinventando la seguridad en aplicaciones en la era de la IA",
     "Ponente": "Bryan Díaz",
     "ImagenTrack1": "data/img/BryanDiaz.png",
-    "Track Villas": "TBD",
-    "Ponente.1": "RF Village",
-    "ImagenVillas": "data/img/RFVillage.png"
+    "Track Villas": "Marauder ESP32, explorando firmware y hardware para su aprovechamiento",
+    "Ponente.1": "D3VK0",
+    "ImagenVillas": "data/img/D3VK0.png"
   },
   {
     "Día": "Viernes",
@@ -134,7 +134,7 @@
     "Horario": "11:00 - 11:50 hrs",
     "Track 1": "Cómo hackearán a tu familia 2: Estafas de siempre, engaños de hoy",
     "Ponente": "Héctor Pardiñas(Chiche)",
-    "ImagenTrack1": "",
+    "ImagenTrack1": "data/img/Chiche.png",
     "Track Villas": "",
     "Ponente.1": "",
     "ImagenVillas": ""
@@ -152,11 +152,11 @@
   {
     "Día": "Sábado",
     "Horario": "13:00 - 13:50 hrs",
-    "Track 1": "TBD",
-    "Ponente": "",
-    "ImagenTrack1": "",
-    "Track Villas": "TBD - Bounty Village",
-    "Ponente.1": "",
+    "Track 1": "¿Es posible vaciar una entidad financiera sin usar un solo 0-day?",
+    "Ponente": "Ángel Gangas",
+    "ImagenTrack1": "data/img/AngelGangas.png",
+    "Track Villas": "TBD",
+    "Ponente.1": "Bounty Village",
     "ImagenVillas": ""
   },
   {
