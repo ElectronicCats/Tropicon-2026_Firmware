@@ -117,21 +117,21 @@ void TalksRenderer::drawTalkDetail(OLEDDisplay *display, OLEDDisplayUiState *sta
     display->drawString(x + 4, y + 36, (talk.time + " @ " + talk.stage).c_str());
     
     display->drawHorizontalLine(x, y + 50, display->getWidth());
-    
-    // Description (simple wrapping)
+
+    // Title with word-wrap (title can be long)
     display->setFont(FONT_SMALL);
     int descY = y + 56;
-    String desc = talk.description.c_str();
+    String title = talk.title.c_str();
     int lineStart = 0;
-    while (lineStart < desc.length() && descY < display->getHeight() - 40) {
-        int lineEnd = lineStart + 25; // Approx chars per line
-        if (lineEnd > desc.length()) lineEnd = desc.length();
-        else {
-            // Find last space
-            int lastSpace = desc.lastIndexOf(' ', lineEnd);
+    while (lineStart < (int)title.length() && descY < display->getHeight() - 36) {
+        int lineEnd = lineStart + 26;
+        if (lineEnd >= (int)title.length()) {
+            lineEnd = title.length();
+        } else {
+            int lastSpace = title.lastIndexOf(' ', lineEnd);
             if (lastSpace > lineStart) lineEnd = lastSpace;
         }
-        display->drawString(x + 4, descY, desc.substring(lineStart, lineEnd));
+        display->drawString(x + 4, descY, title.substring(lineStart, lineEnd));
         lineStart = lineEnd + 1;
         descY += 12;
     }

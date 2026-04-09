@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <set>
 #include "graphics/Screen.h"
+#include <ArduinoJson.h>
 
 extern graphics::Screen *screen;
 
@@ -13,16 +14,16 @@ TalksModule *talksModule = nullptr;
 TalksModule::TalksModule() : MeshModule("Talks"), concurrency::OSThread("TalksModule") {
     talksModule = this;
     loadSchedule();
+    loadTalleres();
     loadInterests();
-    
-    // Registrar observer de input CORRECTAMENTE
+
     if (inputBroker) {
         inputObserver.observe(inputBroker);
         LOG_INFO("TalksModule: Input observer registered");
     } else {
         LOG_ERROR("TalksModule: inputBroker not available");
     }
-    
+
     setIntervalFromNow(1000);
 }
 
@@ -30,64 +31,141 @@ TalksModule::~TalksModule() {
     talksModule = nullptr;
 }
 
+// ── schedule.json parser ──────────────────────────────────────────────────────
+// Each entry has up to two tracks: "Track 1" and "Track Villas".
+// Entries with empty title or only whitespace are skipped.
 void TalksModule::loadSchedule() {
-    // Meshtastic filesystem is usually mounted at /
-    File file = FSCom.open("/schedule.csv", FILE_O_READ);
+    File file = FSCom.open("/schedule.json", FILE_O_READ);
     if (!file) {
-        LOG_ERROR("Failed to open /schedule.csv");
+        LOG_ERROR("TalksModule: Failed to open /schedule.json");
         return;
     }
-    
-    talks.clear();
-    while (file.available()) {
-        String line = file.readStringUntil('\n');
-        line.trim();
-        if (line.length() > 0) {
-            parseCSVLine(line.c_str());
+
+    // Size the document for a ~25-entry array; each entry has ~8 string fields.
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, file);
+    file.close();
+
+    if (err) {
+        LOG_ERROR("TalksModule: schedule.json parse error: %s", err.c_str());
+        return;
+    }
+
+    JsonArray arr = doc.as<JsonArray>();
+    for (JsonObject entry : arr) {
+        const char* day     = entry["Día"]    | "";
+        const char* horario = entry["Horario"] | "";
+
+        // Track 1
+        const char* title1  = entry["Track 1"]        | "";
+        const char* ponente1= entry["Ponente"]         | "";
+        const char* img1    = entry["ImagenTrack1"]    | "";
+
+        if (title1 && title1[0] != '\0') {
+            Talk t;
+            t.day     = day;
+            t.time    = horario;
+            t.stage   = STAGE_TRACK1;
+            t.title   = title1;
+            t.speaker = ponente1;
+            t.image   = img1;
+            t.interest = 0;
+            t.id      = string(day) + "|" + horario + "|T1";
+            talks.push_back(t);
+        }
+
+        // Track Villas
+        const char* title2  = entry["Track Villas"]   | "";
+        const char* ponente2= entry["Ponente.1"]       | "";
+        const char* img2    = entry["ImagenVillas"]    | "";
+
+        if (title2 && title2[0] != '\0') {
+            Talk t;
+            t.day     = day;
+            t.time    = horario;
+            t.stage   = STAGE_VILLAS;
+            t.title   = title2;
+            t.speaker = ponente2;
+            t.image   = img2;
+            t.interest = 0;
+            t.id      = string(day) + "|" + horario + "|TV";
+            talks.push_back(t);
         }
     }
-    file.close();
-    LOG_INFO("Loaded %d talks from schedule.csv", (int)talks.size());
+
+    LOG_INFO("TalksModule: Loaded %d entries from schedule.json", (int)talks.size());
 }
 
-void TalksModule::parseCSVLine(const string& line) {
-    Talk talk;
-    vector<string> parts;
-    size_t start = 0;
-    size_t end = line.find('$');
-    while (end != string::npos) {
-        parts.push_back(line.substr(start, end - start));
-        start = end + 1;
-        end = line.find('$', start);
+// ── talleres.json parser ──────────────────────────────────────────────────────
+// Each entry has 4 workshop slots. Only slots with a non-empty "Taller" field
+// are added, using the slot name ("Salón Maya", etc.) as the stage.
+void TalksModule::loadTalleres() {
+    File file = FSCom.open("/talleres.json", FILE_O_READ);
+    if (!file) {
+        LOG_ERROR("TalksModule: Failed to open /talleres.json");
+        return;
     }
-    parts.push_back(line.substr(start));
-    
-    if (parts.size() < 7) return;
-    
-    talk.day = parts[0];
-    talk.time = parts[1];
-    talk.stage = parts[2];
-    talk.title = parts[3];
-    talk.speaker = parts[4];
-    talk.image = parts[5];
-    talk.description = parts[6];
-    talk.interest = 0;
-    
-    // Create a simple ID for persistence
-    talk.id = talk.title; // For simplicity, title is the ID if unique
-    
-    talks.push_back(talk);
+
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, file);
+    file.close();
+
+    if (err) {
+        LOG_ERROR("TalksModule: talleres.json parse error: %s", err.c_str());
+        return;
+    }
+
+    // Map from JSON key → stage display name & Talk id suffix
+    struct SlotDef { const char* key; const char* stage; const char* imgKey; const char* idSuffix; };
+    static const SlotDef slots[] = {
+        { "Taller #1: Salón Maya",    STAGE_TALLER1, "ImgTaller1", "W1" },
+        { "Taller #2: Salón la Isla", STAGE_TALLER2, "ImgTaller2", "W2" },
+        { "Taller #3: Suite 1",       STAGE_TALLER3, "ImgTaller3", "W3" },
+        { "Taller #4: Suite 2",       STAGE_TALLER4, "ImgTaller4", "W4" },
+    };
+
+    JsonArray arr = doc.as<JsonArray>();
+    for (JsonObject entry : arr) {
+        const char* day     = entry["Día"]     | "";
+        const char* horario = entry["Horario"] | "";
+
+        for (const auto& slot : slots) {
+            JsonObject workshop = entry[slot.key];
+            if (workshop.isNull()) continue;
+
+            const char* title  = workshop["Taller"]      | "";
+            const char* ponente= workshop["Tallerista"]   | "";
+            const char* img    = workshop[slot.imgKey]    | "";
+
+            if (title && title[0] != '\0') {
+                Talk t;
+                t.day     = day;
+                t.time    = horario;
+                t.stage   = slot.stage;
+                t.title   = title;
+                t.speaker = ponente;
+                t.image   = img;
+                t.interest = 0;
+                t.id      = string(day) + "|" + horario + "|" + slot.idSuffix;
+                talks.push_back(t);
+            }
+        }
+    }
+
+    LOG_INFO("TalksModule: Loaded %d total entries (schedule + talleres)", (int)talks.size());
 }
+
+// ── Persistence ───────────────────────────────────────────────────────────────
 
 void TalksModule::loadInterests() {
     File file = FSCom.open("/talks_int.dat", FILE_O_READ);
     if (!file) return;
-    
+
     while (file.available()) {
-        String id = file.readStringUntil('$');
+        String id       = file.readStringUntil('$');
         String stateStr = file.readStringUntil('\n');
-        int state = stateStr.toInt();
-        
+        int    state    = stateStr.toInt();
+
         for (auto& t : talks) {
             if (t.id == id.c_str()) {
                 t.interest = state;
@@ -99,22 +177,18 @@ void TalksModule::loadInterests() {
 }
 
 void TalksModule::saveInterest(const string& talkId, int state) {
-    // Find and update in memory
     for (auto& t : talks) {
         if (t.id == talkId) {
             t.interest = state;
             break;
         }
     }
-    
-    // Mark as dirty and schedule flash write
     isDirty = true;
     lastInteractionMs = millis();
 }
 
 int32_t TalksModule::runOnce() {
     if (isDirty && millis() - lastInteractionMs > 5000) {
-        // Simple persistence: rewrite the file
         File file = FSCom.open("/talks_int.dat", FILE_O_WRITE);
         if (file) {
             for (const auto& t : talks) {
@@ -129,47 +203,51 @@ int32_t TalksModule::runOnce() {
         isDirty = false;
         LOG_INFO("TalksModule: Saved interests to flash");
     }
-    return 1000; // Run again in 1 second
+    return 1000;
 }
 
+// ── Queries ───────────────────────────────────────────────────────────────────
+
 vector<string> TalksModule::getDays() {
-    set<string> days;
+    // Preserve insertion order (Viernes before Sábado)
+    vector<string> days;
+    set<string>    seen;
     for (const auto& t : talks) {
-        days.insert(t.day);
+        if (seen.insert(t.day).second)
+            days.push_back(t.day);
     }
-    return vector<string>(days.begin(), days.end());
+    return days;
 }
 
 vector<string> TalksModule::getStages(const string& day) {
-    set<string> stages;
+    vector<string> stages;
+    set<string>    seen;
     for (const auto& t : talks) {
-        if (t.day == day) {
-            stages.insert(t.stage);
-        }
+        if (t.day == day && seen.insert(t.stage).second)
+            stages.push_back(t.stage);
     }
-    return vector<string>(stages.begin(), stages.end());
+    return stages;
 }
 
 vector<int> TalksModule::getFilteredTalkIndices(const string& day, const string& stage) {
     vector<int> indices;
     for (size_t i = 0; i < talks.size(); ++i) {
-        if (talks[i].day == day && talks[i].stage == stage) {
+        if (talks[i].day == day && talks[i].stage == stage)
             indices.push_back((int)i);
-        }
     }
     return indices;
 }
 
+// ── Input handler ─────────────────────────────────────────────────────────────
+
 int TalksModule::handleInputEvent(const InputEvent *event)
 {
-    // Guards
     if (!screen || !screen->isScreenOn()) return 0;
     if (screen->getCurrentFrame() != graphics::Screen::FOCUS_TALKS) return 0;
     if (screen->isOverlayBannerShowing()) return 0;
 
     LOG_DEBUG("TalksModule input: %d", event->inputEvent);
 
-    // ── Pre-compute context defensively ──────────────────────────────────────
     auto days    = getDays();
     int  numDays = (int)days.size();
     if (numDays == 0) return 0;
@@ -183,25 +261,18 @@ int TalksModule::handleInputEvent(const InputEvent *event)
     auto talkIndices = getFilteredTalkIndices(days[currentDayIndex], stages[currentStageIndex]);
     int  numTalks    = (int)talkIndices.size();
 
-    // ── UP: charla anterior ───────────────────────────────────────────────────
     if (event->inputEvent == INPUT_BROKER_UP) {
-        if (!inDetailView) {
-            if (currentTalkIndex > 0) currentTalkIndex--;
-        }
+        if (!inDetailView && currentTalkIndex > 0) currentTalkIndex--;
         screen->runNow();
         return 1;
     }
 
-    // ── DOWN: charla siguiente ────────────────────────────────────────────────
     if (event->inputEvent == INPUT_BROKER_DOWN) {
-        if (!inDetailView) {
-            if (currentTalkIndex < numTalks - 1) currentTalkIndex++;
-        }
+        if (!inDetailView && currentTalkIndex < numTalks - 1) currentTalkIndex++;
         screen->runNow();
         return 1;
     }
 
-    // ── LEFT: día anterior (cicla) ────────────────────────────────────────────
     if (event->inputEvent == INPUT_BROKER_LEFT) {
         if (!inDetailView) {
             currentDayIndex = (currentDayIndex - 1 + numDays) % numDays;
@@ -213,14 +284,12 @@ int TalksModule::handleInputEvent(const InputEvent *event)
         return 1;
     }
 
-    // ── RIGHT: día siguiente / stage siguiente ────────────────────────────────
     if (event->inputEvent == INPUT_BROKER_RIGHT) {
         if (!inDetailView) {
-            // Primero intenta avanzar el stage; si ya es el último, avanza el día
             if (numStages > 1 && currentStageIndex < numStages - 1) {
                 currentStageIndex++;
             } else {
-                currentDayIndex  = (currentDayIndex + 1) % numDays;
+                currentDayIndex   = (currentDayIndex + 1) % numDays;
                 currentStageIndex = 0;
             }
             currentTalkIndex = 0;
@@ -229,7 +298,6 @@ int TalksModule::handleInputEvent(const InputEvent *event)
         return 1;
     }
 
-    // ── SELECT: entrar al detalle / ciclar interés ────────────────────────────
     if (event->inputEvent == INPUT_BROKER_SELECT) {
         if (inDetailView) {
             if (numTalks > 0 && currentTalkIndex < numTalks) {
@@ -243,7 +311,6 @@ int TalksModule::handleInputEvent(const InputEvent *event)
         return 1;
     }
 
-    // ── BACK / CANCEL: salir del detalle o del módulo ─────────────────────────
     if (event->inputEvent == INPUT_BROKER_BACK ||
         event->inputEvent == INPUT_BROKER_CANCEL) {
         if (inDetailView) {
@@ -255,7 +322,6 @@ int TalksModule::handleInputEvent(const InputEvent *event)
         return 1;
     }
 
-    // ── SELECT_LONG: salir al frame principal desde cualquier nivel ───────────
     if (event->inputEvent == INPUT_BROKER_SELECT_LONG) {
         inDetailView = false;
         screen->setFrames(graphics::Screen::FOCUS_DEFAULT);
@@ -263,7 +329,6 @@ int TalksModule::handleInputEvent(const InputEvent *event)
         return 1;
     }
 
-    // Cualquier otro evento (USER_PRESS, etc.) se pasa al sistema estándar
     return 0;
 }
 

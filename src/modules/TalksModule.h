@@ -9,6 +9,16 @@
 
 using namespace std;
 
+// "stage" values for schedule.json tracks
+#define STAGE_TRACK1   "Track 1"
+#define STAGE_VILLAS   "Track Villas"
+
+// "stage" values for talleres.json workshops
+#define STAGE_TALLER1  "Salón Maya"
+#define STAGE_TALLER2  "Salón la Isla"
+#define STAGE_TALLER3  "Suite 1"
+#define STAGE_TALLER4  "Suite 2"
+
 struct Talk {
     string id;
     string day;
@@ -17,7 +27,6 @@ struct Talk {
     string title;
     string speaker;
     string image;
-    string description;
     int interest; // 0: None, 1: Asistir, 2: Tal vez, 3: Saltar
 };
 
@@ -27,20 +36,21 @@ public:
     virtual ~TalksModule();
 
     void loadSchedule();
+    void loadTalleres();
     void loadInterests();
     void saveInterest(const string& talkId, int state);
-    
+
     const vector<Talk>& getTalks() const { return talks; }
-    
+
     // UI state
-    int currentDayIndex = 0;
+    int currentDayIndex   = 0;
     int currentStageIndex = 0;
-    int currentTalkIndex = 0;
-    bool inDetailView = false;
+    int currentTalkIndex  = 0;
+    bool inDetailView     = false;
 
     vector<string> getDays();
     vector<string> getStages(const string& day);
-    vector<int> getFilteredTalkIndices(const string& day, const string& stage);
+    vector<int>    getFilteredTalkIndices(const string& day, const string& stage);
 
     // Input handling
     int handleInputEvent(const InputEvent *event);
@@ -53,10 +63,8 @@ public:
 
 private:
     vector<Talk> talks;
-    bool isDirty = false;
+    bool     isDirty           = false;
     uint32_t lastInteractionMs = 0;
-    
-    void parseCSVLine(const string& line);
 
     // Observer for input
     CallbackObserver<TalksModule, const InputEvent *> inputObserver =
@@ -64,6 +72,5 @@ private:
 };
 
 extern TalksModule *talksModule;
-
 
 #endif

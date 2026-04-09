@@ -87,7 +87,7 @@
 #define TFT_OFFSET_Y1           0
 #define TFT_OFFSET_X2           0
 #define TFT_OFFSET_Y2           0
-#define TFT_ROTATION            1
+#define TFT_ROTATION            2
 #define SCREEN_TRANSITION_FRAMERATE 5
 #define HAS_SCREEN              1
 #define TFT_BLACK               0
