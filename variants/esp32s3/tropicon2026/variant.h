@@ -83,11 +83,11 @@
 #define SPI_READ_FREQUENCY      16000000
 #define TFT_HEIGHT              428  // Physical rows  (NV3007_TFTHEIGHT)
 #define TFT_WIDTH               168  // Physical columns (NV3007_TFTWIDTH) — confirmed by test code
-#define TFT_OFFSET_X1           0    // No offset — confirmed by working test (TestNV3007_S3_INO.cpp)
+#define TFT_OFFSET_X1           12
 #define TFT_OFFSET_Y1           0
 #define TFT_OFFSET_X2           0
 #define TFT_OFFSET_Y2           0
-#define TFT_ROTATION            0
+#define TFT_ROTATION            1
 #define SCREEN_TRANSITION_FRAMERATE 5
 #define HAS_SCREEN              1
 #define TFT_BLACK               0

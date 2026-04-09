@@ -1507,6 +1507,8 @@ bool TFTDisplay::connect()
     tft->setRotation(2); // T-Watch S3 left-handed orientation
 #elif ARCH_PORTDUINO || defined(SENSECAP_INDICATOR) || defined(T_LORA_PAGER)
     tft->setRotation(0); // use config.yaml to set rotation
+#elif defined(TROPICON2026)
+    tft->setRotation(TFT_ROTATION); // Controlled from variant.h — portrait: 0 or 2, landscape: 1 or 3
 #else
     tft->setRotation(3); // Orient horizontal and wide underneath the silkscreen name label
 #endif
