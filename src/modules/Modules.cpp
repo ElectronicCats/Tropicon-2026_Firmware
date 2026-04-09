@@ -98,7 +98,7 @@
 #endif
 
 #if !MESHTASTIC_EXCLUDE_DROPZONE
-#include "modules/DropzoneModule.h"
+#include "modules/DropzoneMocleadule.h"
 #endif
 #if !MESHTASTIC_EXCLUDE_STATUS
 #include "modules/StatusMessageModule.h"

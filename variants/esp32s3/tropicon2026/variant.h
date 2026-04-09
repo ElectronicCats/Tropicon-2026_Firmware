@@ -60,31 +60,39 @@
 //   LED         │ LED         │ IO02         │ Backlight (PWM output)
 //
 // ── Display ER-TFT2.79-1 (controller: NV3007) — SPI Bus 2 (HSPI) ─────────────
-// Using Arduino_GFX with Arduino_NV3007 driver (same as hackaday-communicator)
+// Using Arduino_GFX with Arduino_NV3007 driver
 
+// === Pines ======================= //
+// SPI bus configuration
+#define TFT_MOSI                11   // IO11 = SDA (SPI MOSI)
+#define TFT_SCLK                12   // IO12 = SCL (SPI SCLK)
 
+// SPI pins for display
+#define TFT_DC                  9    // IO09 = D/CX (Data/Command select)
+#define TFT_RST                 21   // IO21 = RESX (Reset)
+#define TFT_CS                  10   // IO10 = CSX (Chip Select)
+
+// Brightness control
 #define TFT_BL                  2    // IO02 = LCD_BRIGHT (PWM output)
+
+#define TFT_MISO                -1 // No usado
+
+//================================== //
+
 #define SPI_FREQUENCY           2000000
 #define SPI_READ_FREQUENCY      16000000
-#define TFT_HEIGHT              428  // Long axis (rows)
-#define TFT_WIDTH               142  // Short axis (columns) - Corrected to match NV3007 spec
-#define TFT_OFFSET_X            0
-#define TFT_OFFSET_Y            0
-#define TFT_OFFSET_ROTATION     0
+#define TFT_HEIGHT              428  // Physical rows  (NV3007_TFTHEIGHT)
+#define TFT_WIDTH               168  // Physical columns (NV3007_TFTWIDTH) — confirmed by test code
+#define TFT_OFFSET_X1           0    // No offset — confirmed by working test (TestNV3007_S3_INO.cpp)
+#define TFT_OFFSET_Y1           0
+#define TFT_OFFSET_X2           0
+#define TFT_OFFSET_Y2           0
+#define TFT_ROTATION            0
 #define SCREEN_TRANSITION_FRAMERATE 5
 #define HAS_SCREEN              1
 #define TFT_BLACK               0
 #define BRIGHTNESS_DEFAULT      130  // Medium Low Brightness
 #define USE_TFTDISPLAY          1
-
-// SPI pins for display (same naming as hackaday-communicator)
-#define TFT_DC                  9    // IO09 = D/CX (Data/Command select)
-#define TFT_CS                  10   // IO10 = CSX (Chip Select)
-#define TFT_RST                 21   // IO21 = RESX (Reset)
-
-// SPI bus configuration
-#define TFT_MOSI                11   // IO11 = SDA (SPI MOSI)
-#define TFT_SCLK                12   // IO12 = SCL (SPI SCLK)
 
 #define USE_POWERSAVE
 #define SLEEP_TIME              120

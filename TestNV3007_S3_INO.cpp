@@ -7,7 +7,7 @@
 #define TFT_DC       9 // Data/Command
 #define TFT_RST     21 // Reset
 #define TFT_CS      10 // Chip Select
-#define TFT_BL      38 // Backlight
+#define TFT_BL       2 // Backlight
 #define TFT_MISO    -1 // No usado
 
 // --- Configuración del Bus SPI e Instancia de la Pantalla ---

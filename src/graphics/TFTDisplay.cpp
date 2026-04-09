@@ -1458,17 +1458,19 @@ bool TFTDisplay::connect()
     LOG_INFO("Do TFT init");
 #ifdef RAK14014
     tft = new TFT_eSPI;
-#elif defined(HACKADAY_COMMUNICATOR) || defined(TROPICON2026)
+#elif defined(TROPICON2026)
+    // FSPI is used by LoRa (SX1262). HSPI is free (SI4463 disabled).
+    // Display uses HSPI with its dedicated pins (IO12/11).
+    bus = new Arduino_ESP32SPI(TFT_DC, TFT_CS, TFT_SCLK, TFT_MOSI, GFX_NOT_DEFINED /* MISO */, HSPI /* spi_num */);
+    tft = new Arduino_NV3007(bus, TFT_RST, TFT_ROTATION /* rotation */, false /* IPS */, TFT_WIDTH /* width */, TFT_HEIGHT /* height */,
+                             TFT_OFFSET_X1 /* col_offset1 */, TFT_OFFSET_Y1 /* row_offset1 */, TFT_OFFSET_X2 /* col_offset2 */,  TFT_OFFSET_Y2/* row_offset2 */,
+                             nv3007_279_init_operations, sizeof(nv3007_279_init_operations));
+
+#elif defined(HACKADAY_COMMUNICATOR)
     bus = new Arduino_ESP32SPI(TFT_DC, TFT_CS, 38 /* SCK */, 21 /* MOSI */, GFX_NOT_DEFINED /* MISO */, HSPI /* spi_num */);
-    tft = new Arduino_NV3007(bus, 40, 0 /* rotation */, false /* IPS */, 142 /* width */, 428 /* height */, 12 /* col offset 1 */,
+    tft = new Arduino_NV3007(bus, 40, 2 /* rotation */, false /* IPS */, 142 /* width */, 428 /* height */, 12 /* col offset 1 */,
                              0 /* row offset 1 */, 14 /* col offset 2 */, 0 /* row offset 2 */, nv3007_279_init_operations,
                              sizeof(nv3007_279_init_operations));
-
-#elif defined(TROPICON2026)
-    bus = new Arduino_ESP32SPI(TFT_DC, TFT_CS, TFT_SCLK, TFT_MOSI, GFX_NOT_DEFINED /* MISO */, HSPI /* spi_num */);
-    tft = new Arduino_NV3007(bus, TFT_RST, 0 /* rotation */, false /* IPS */, 142 /* width */, 428 /* height */,
-                             12 /* col offset 1 */, 0 /* row offset 1 */, 14 /* col offset 2 */, 0 /* row offset 2 */,
-                             nv3007_279_init_operations, sizeof(nv3007_279_init_operations));
 
 #else
     tft = new LGFX;
