@@ -1,19 +1,13 @@
 #include <Arduino_GFX_Library.h>
 #include <Adafruit_NeoPixel.h>
 
-// === LED ===//
-#define PIN_LED  8
-#define NUM_LEDS 1
-
-Adafruit_NeoPixel tiraLed(NUM_LEDS, PIN_LED, NEO_GRB + NEO_KHZ800);
-
-// ESP32-C6-DevKitC-1 Recommended Pins
-#define TFT_MOSI    35 // SPI MOSI (SDA)
-#define TFT_CLK     36 // SPI SCLK
-#define TFT_DC      41 // Data/Command
-#define TFT_RST     42 // Reset
-#define TFT_CS      40 // Chip Select
-#define TFT_BL      48 // Backlight
+// ESP32-CS3-DevKitC-1 Customized Pins
+#define TFT_MOSI    11 // SPI MOSI (SDA)
+#define TFT_CLK     12 // SPI SCLK
+#define TFT_DC       9 // Data/Command
+#define TFT_RST     21 // Reset
+#define TFT_CS      10 // Chip Select
+#define TFT_BL      38 // Backlight
 #define TFT_MISO    -1 // No usado
 
 // --- Configuración del Bus SPI e Instancia de la Pantalla ---
@@ -28,15 +22,9 @@ Arduino_NV3007 *gfx = new Arduino_NV3007(
 
 void setup(void)
 {
-    // Inicializar LED
-    tiraLed.begin();
-    tiraLed.clear();
-    tiraLed.setPixelColor(0, tiraLed.Color(0, 0, 255)); // Azul
-    tiraLed.show();
-
     Serial.begin(115200);
     delay(2000);
-    Serial.println("Iniciando pantalla NV3007 con ESP32-C6...");
+    Serial.println("Iniciando pantalla NV3007 con ESP32-S3...");
 
     // Configurar backlight
     pinMode(TFT_BL, OUTPUT);
@@ -45,16 +33,9 @@ void setup(void)
     // Inicializar pantalla con frecuencia de 20MHz para mayor estabilidad
     if (!gfx->begin(20000000))
     {
-        tiraLed.clear();
-        tiraLed.setPixelColor(0, tiraLed.Color(255, 0, 0)); // Rojo
-        tiraLed.show();
         Serial.println("¡Error al inicializar la pantalla!");
         while (1) { delay(1000); }
     }
-
-    tiraLed.clear();
-    tiraLed.setPixelColor(0, tiraLed.Color(0, 255, 0)); // Verde
-    tiraLed.show();
 
     Serial.println("Pantalla inicializada correctamente.");
     Serial.print("Resolución: ");
@@ -67,7 +48,7 @@ void setup(void)
     gfx->setCursor(10, 50);
     gfx->setTextColor(RGB565_WHITE);
     gfx->setTextSize(2);
-    gfx->println("Hola, ESP32-C6!");
+    gfx->println("Hola, ESP32-S3!");
 
     gfx->setCursor(10, 90);
     gfx->setTextColor(RGB565_GREEN);
