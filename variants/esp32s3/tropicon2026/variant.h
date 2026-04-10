@@ -33,9 +33,12 @@
 #define SX126X_DIO2_AS_RF_SWITCH
 #define SX126X_DIO3_TCXO_VOLTAGE 1.8
 
-// ── I2C Bus 1 — AHT30 Temperature & Humidity Sensor ──────────────────────────
+// ── I2C Bus 1 — AHT10 Temperature & Humidity Sensor ─────────────────────────
 #define I2C_SDA        42   // IO42 = SDA
 #define I2C_SCL        41   // IO41 = SCL
+
+#define HAS_TELEMETRY  1    // Enable environmental telemetry module
+#define HAS_SENSOR     1    // Enable I2C sensor scanner (detects AHT10 at 0x38)
 
 // ── SI4463 Radio — SPI ───────────────────────────────────────────────────────
 
@@ -94,8 +97,8 @@
 #define BRIGHTNESS_DEFAULT      130  // Medium Low Brightness
 #define USE_TFTDISPLAY          1
 
-#define USE_POWERSAVE
-#define SLEEP_TIME              120
+//#define USE_POWERSAVE
+//#define SLEEP_TIME              120
 
 // ── Navigation Buttons ────────────────────────────────────────────────────────
 // Primary button (IO40): single-press = advance frame, long-press = open menu,
