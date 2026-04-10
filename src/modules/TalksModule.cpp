@@ -13,8 +13,7 @@ TalksModule *talksModule = nullptr;
 
 TalksModule::TalksModule() : MeshModule("Talks"), concurrency::OSThread("TalksModule") {
     talksModule = this;
-    loadSchedule();
-    loadTalleres();
+    // Removed loadSchedule() and loadTalleres() from constructor to save baseline RAM
     loadInterests();
 
     if (inputBroker) {
@@ -208,8 +207,18 @@ int32_t TalksModule::runOnce() {
 
 // ── Queries ───────────────────────────────────────────────────────────────────
 
+void TalksModule::ensureLoaded() {
+    if (!isLoaded) {
+        LOG_INFO("TalksModule: Lazy loading data...");
+        loadSchedule();
+        loadTalleres();
+        loadInterests();
+        isLoaded = true;
+    }
+}
+
 vector<string> TalksModule::getDays() {
-    // Preserve insertion order (Viernes before Sábado)
+    ensureLoaded();
     vector<string> days;
     set<string>    seen;
     for (const auto& t : talks) {
@@ -220,6 +229,7 @@ vector<string> TalksModule::getDays() {
 }
 
 vector<string> TalksModule::getStages(const string& day) {
+    ensureLoaded();
     vector<string> stages;
     set<string>    seen;
     for (const auto& t : talks) {
@@ -230,6 +240,7 @@ vector<string> TalksModule::getStages(const string& day) {
 }
 
 vector<int> TalksModule::getFilteredTalkIndices(const string& day, const string& stage) {
+    ensureLoaded();
     vector<int> indices;
     for (size_t i = 0; i < talks.size(); ++i) {
         if (talks[i].day == day && talks[i].stage == stage)

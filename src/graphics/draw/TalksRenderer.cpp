@@ -139,10 +139,8 @@ void TalksRenderer::drawTalkDetail(OLEDDisplay *display, OLEDDisplayUiState *sta
     } else {
         TFTDisplay::clearPngOverlay();
     }
-    // Draw a placeholder border so the OLEDDisplay buffer has the correct
-    // bounding box and display() will flush the image area to TFT_BLACK on
-    // the very first frame (before the PNG overlay is drawn on top).
-    display->drawRect(x, IMG_TOP, display->getWidth(), IMG_HEIGHT);
+    // Removed placeholder drawRect as it interferes with the "Draw-Once-and-Skip" strategy.
+    // The image area is kept at 0 (black) in the OLED buffer naturally.
 
     // ── Description (word-wrapped title) ─────────────────────────────────────
     display->drawHorizontalLine(x, IMG_BOTTOM + 2, display->getWidth());

@@ -35,12 +35,13 @@ public:
     TalksModule();
     virtual ~TalksModule();
 
+    void ensureLoaded();
+    const vector<Talk>& getTalks() { ensureLoaded(); return talks; }
+
     void loadSchedule();
     void loadTalleres();
     void loadInterests();
     void saveInterest(const string& talkId, int state);
-
-    const vector<Talk>& getTalks() const { return talks; }
 
     // UI state
     int currentDayIndex   = 0;
@@ -63,6 +64,7 @@ public:
 
 private:
     vector<Talk> talks;
+    bool     isLoaded          = false;
     bool     isDirty           = false;
     uint32_t lastInteractionMs = 0;
 

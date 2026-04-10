@@ -143,7 +143,6 @@ static struct {
     int16_t  h         = 0;   // cached pixel height
     int16_t  srcStartX = 0;   // horizontal crop offset into source image
     int16_t  srcStartY = 0;   // vertical   crop offset into source image
-    uint16_t *pixels   = nullptr; // big-endian RGB565 pixel cache
 } s_pngOvl;
 
 // PNG object pointer: allocated on the heap only while a PNG is being decoded
@@ -165,7 +164,7 @@ static int32_t s_pngSeek(PNGFILE *, int32_t pos)             { return s_pngFile.
 
 static int s_pngDraw(PNGDRAW *pDraw)
 {
-    if (!s_pngOvl.pixels || !s_pngPtr)
+    if (!s_pngPtr)
         return 1;
 
     int dstY = (int)pDraw->y - (int)s_pngOvl.srcStartY;
@@ -179,7 +178,6 @@ static int s_pngDraw(PNGDRAW *pDraw)
     static uint16_t lineBuf[640];
     s_pngPtr->getLineAsRGB565(pDraw, lineBuf, PNG_RGB565_LITTLE_ENDIAN, 0xFFFFFFFF);
 
-    uint16_t *dst = s_pngOvl.pixels + dstY * s_pngOvl.w;
     int       startX = s_pngOvl.srcStartX;
     int       copyW  = s_pngOvl.w;
     if (startX + copyW > (int)pDraw->iWidth)
@@ -189,7 +187,9 @@ static int s_pngDraw(PNGDRAW *pDraw)
 
     // byte-swap to big-endian expected by draw16bitBeRGBBitmap
     for (int i = 0; i < copyW; i++)
-        dst[i] = __builtin_bswap16(lineBuf[startX + i]);
+        lineBuf[startX + i] = __builtin_bswap16(lineBuf[startX + i]);
+
+    tft->draw16bitBeRGBBitmap(s_pngOvl.x, s_pngOvl.y + dstY, &lineBuf[startX], copyW, 1);
 
     return 1;
 }
@@ -238,41 +238,28 @@ void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, 
     int16_t dstW = (imgW < maxW) ? imgW : maxW;
     int16_t dstH = (imgH < maxH) ? imgH : maxH;
 
-    size_t bufBytes = (size_t)dstW * dstH * 2;
-    s_pngOvl.pixels = (uint16_t *)malloc(bufBytes);
-    if (!s_pngOvl.pixels) {
-        LOG_WARN("TFTDisplay: setPngOverlay: out of memory (%u bytes)", (unsigned)bufBytes);
-        s_pngPtr->close();
-        delete s_pngPtr;
-        s_pngPtr = nullptr;
-        return;
-    }
-    memset(s_pngOvl.pixels, 0, bufBytes);
-
     s_pngOvl.srcStartX = (imgW > maxW) ? (imgW - maxW) / 2 : 0;
     s_pngOvl.srcStartY = (imgH > maxH) ? (imgH - maxH) / 2 : 0;
     s_pngOvl.w         = dstW;
     s_pngOvl.h         = dstH;
     s_pngOvl.x         = centerX - dstW / 2;
     s_pngOvl.y         = topY;
-    strncpy(s_pngOvl.path, path, sizeof(s_pngOvl.path) - 1);
-    s_pngOvl.path[sizeof(s_pngOvl.path) - 1] = '\0';
 
+    // Draw ONCE to TFT
+    LOG_INFO("TFTDisplay: Decoding PNG overlay once to TFT GRAM: %s", fsPath);
     s_pngPtr->decode(nullptr, 0);
+
     s_pngPtr->close();
     delete s_pngPtr;
     s_pngPtr = nullptr;
 
     s_pngOvl.active = true;
-    LOG_INFO("TFTDisplay: PNG overlay loaded %s (%dx%d at %d,%d)", fsPath, dstW, dstH, s_pngOvl.x, s_pngOvl.y);
+    LOG_INFO("TFTDisplay: PNG overlay pushed to hardware at (%d,%d) %dx%d", s_pngOvl.x, s_pngOvl.y, dstW, dstH);
 }
 
 void TFTDisplay::clearPngOverlay()
 {
     s_pngOvl.active = false;
-    s_pngOvl.path[0] = '\0';
-    free(s_pngOvl.pixels);
-    s_pngOvl.pixels   = nullptr;
     s_pngOvl.w = s_pngOvl.h = 0;
 }
 #endif // TROPICON2026
@@ -1410,6 +1397,13 @@ void TFTDisplay::display(bool fromBlank)
             // Step 3: copy all remaining pixels in this row into the pixel line buffer,
             // while also recording the last pixel in the row that needs updating
             for (x = x_FirstPixelUpdate + 1; x < displayWidth; x++) {
+#if defined(TROPICON2026)
+                // Skip the overlay area to allow the hardware-stored image to persist
+                if (s_pngOvl.active && x >= s_pngOvl.x && x < s_pngOvl.x + s_pngOvl.w && y >= s_pngOvl.y &&
+                    y < s_pngOvl.y + s_pngOvl.h) {
+                    continue;
+                }
+#endif
                 isset = buffer[x + y_byteIndex] & y_byteMask;
                 linePixelBuffer[x] = isset ? colorTftMesh : colorTftBlack;
 
@@ -1422,10 +1416,30 @@ void TFTDisplay::display(bool fromBlank)
                     x_LastPixelUpdate = x;
                 }
             }
-#if defined(HACKADAY_COMMUNICATOR) || defined(TROPICON2026)
-            tft->draw16bitBeRGBBitmap(x_FirstPixelUpdate, y, &linePixelBuffer[x_FirstPixelUpdate],
-                                      (x_LastPixelUpdate - x_FirstPixelUpdate + 1), 1);
-#else
+#if defined(TROPICON2026)
+            if (s_pngOvl.active && y >= s_pngOvl.y && y < s_pngOvl.y + s_pngOvl.h) {
+                // Split drawing to avoid overwriting the persistent PNG in GRAM
+                int ovlX1 = s_pngOvl.x;
+                int ovlX2 = s_pngOvl.x + s_pngOvl.w - 1;
+
+                // Part before the image
+                int p1_start = x_FirstPixelUpdate;
+                int p1_end   = (x_LastPixelUpdate < ovlX1 - 1) ? x_LastPixelUpdate : ovlX1 - 1;
+                if (p1_end >= p1_start) {
+                    tft->draw16bitBeRGBBitmap(p1_start, y, &linePixelBuffer[p1_start], (p1_end - p1_start + 1), 1);
+                }
+
+                // Part after the image
+                int p2_start = (x_FirstPixelUpdate > ovlX2 + 1) ? x_FirstPixelUpdate : ovlX2 + 1;
+                int p2_end   = x_LastPixelUpdate;
+                if (p2_end >= p2_start) {
+                    tft->draw16bitBeRGBBitmap(p2_start, y, &linePixelBuffer[p2_start], (p2_end - p2_start + 1), 1);
+                }
+            } else {
+                tft->draw16bitBeRGBBitmap(x_FirstPixelUpdate, y, &linePixelBuffer[x_FirstPixelUpdate],
+                                          (x_LastPixelUpdate - x_FirstPixelUpdate + 1), 1);
+            }
+#elif defined(HACKADAY_COMMUNICATOR)
             // Step 4: Send the changed pixels on this line to the screen as a single block transfer.
             // This function accepts pixel data MSB first so it can dump the memory straight out the SPI port.
             tft->pushRect(x_FirstPixelUpdate, y, (x_LastPixelUpdate - x_FirstPixelUpdate + 1), 1,
@@ -1440,12 +1454,9 @@ void TFTDisplay::display(bool fromBlank)
         memcpy(buffer_back, buffer, displayBufferSize);
 
 #if defined(TROPICON2026)
-    // Draw PNG overlay directly on the TFT (bypasses the 1-bit OLEDDisplay buffer).
-    // Only needed when something changed — once drawn, the overlay persists on the TFT
-    // because the image region in the OLEDDisplay buffer stays 0 and is never re-pushed.
-    if (somethingChanged && s_pngOvl.active && s_pngOvl.pixels) {
-        tft->draw16bitBeRGBBitmap(s_pngOvl.x, s_pngOvl.y, s_pngOvl.pixels, s_pngOvl.w, s_pngOvl.h);
-    }
+    // Draw PNG overlay directly on the TFT.
+    // In the "Draw-Once-and-Skip" strategy, we don't redraw the image here.
+    // It stays in the TFT's GRAM because we bypass those coordinates in the loops above.
 #endif
 }
 
