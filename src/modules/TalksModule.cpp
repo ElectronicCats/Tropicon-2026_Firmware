@@ -298,6 +298,19 @@ int TalksModule::handleInputEvent(const InputEvent *event)
         return 1;
     }
 
+    // USER_PRESS: pulsación corta de BUTTON_PIN (IO40) — alterna vista detalle
+    if (event->inputEvent == INPUT_BROKER_USER_PRESS) {
+        if (inDetailView) {
+            inDetailView = false;
+        } else {
+            if (numTalks > 0) inDetailView = true;
+        }
+        screen->runNow();
+        return 1;
+    }
+
+    // SELECT: pulsación larga de BUTTON_PIN (IO40, ≥500 ms)
+    // — en detalle: cicla el interés; en lista: sale al menú principal
     if (event->inputEvent == INPUT_BROKER_SELECT) {
         if (inDetailView) {
             if (numTalks > 0 && currentTalkIndex < numTalks) {
@@ -305,7 +318,7 @@ int TalksModule::handleInputEvent(const InputEvent *event)
                 saveInterest(talks[idx].id, (talks[idx].interest + 1) % 4);
             }
         } else {
-            if (numTalks > 0) inDetailView = true;
+            screen->setFrames(graphics::Screen::FOCUS_DEFAULT);
         }
         screen->runNow();
         return 1;
@@ -322,6 +335,7 @@ int TalksModule::handleInputEvent(const InputEvent *event)
         return 1;
     }
 
+    // SELECT_LONG: exit to main screen from any level
     if (event->inputEvent == INPUT_BROKER_SELECT_LONG) {
         inDetailView = false;
         screen->setFrames(graphics::Screen::FOCUS_DEFAULT);

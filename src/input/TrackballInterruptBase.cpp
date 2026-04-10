@@ -77,7 +77,7 @@ int32_t TrackballInterruptBase::runOnce()
         uint32_t pressDuration = millis() - pressStartTime;
         bool buttonStillPressed = false;
 
-        buttonStillPressed = !digitalRead(_pinPress);
+        buttonStillPressed = (_pinPress != 255) && !digitalRead(_pinPress);
 
         if (!buttonStillPressed) {
             // Button released
@@ -107,13 +107,13 @@ int32_t TrackballInterruptBase::runOnce()
         uint8_t directionPressedNow = 0;
         directionInterval++;
 
-        if (!digitalRead(_pinUp)) {
+        if (_pinUp != 255 && !digitalRead(_pinUp)) {
             directionPressedNow = TB_ACTION_UP;
-        } else if (!digitalRead(_pinDown)) {
+        } else if (_pinDown != 255 && !digitalRead(_pinDown)) {
             directionPressedNow = TB_ACTION_DOWN;
-        } else if (!digitalRead(_pinLeft)) {
+        } else if (_pinLeft != 255 && !digitalRead(_pinLeft)) {
             directionPressedNow = TB_ACTION_LEFT;
-        } else if (!digitalRead(_pinRight)) {
+        } else if (_pinRight != 255 && !digitalRead(_pinRight)) {
             directionPressedNow = TB_ACTION_RIGHT;
         }
 

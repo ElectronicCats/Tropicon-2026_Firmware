@@ -1223,6 +1223,13 @@ void Screen::setFrames(FrameFocus focus)
     this->frameCount = numframes; // Save frame count for use in custom overlay
     LOG_DEBUG("Finished build frames. numframes: %d", numframes);
 
+#if defined(TROPICON2026)
+    // FOCUS_DEFAULT uses deviceFocused; ensure it points to the home frame so that
+    // calling setFrames(FOCUS_DEFAULT) from TalksModule navigates away from Talks.
+    if (fsi.positions.deviceFocused == 255 && fsi.positions.home != 255)
+        fsi.positions.deviceFocused = fsi.positions.home;
+#endif
+
     ui->setFrames(normalFrames, numframes);
     ui->disableAllIndicators();
 
@@ -1742,6 +1749,12 @@ int Screen::handleInputEvent(const InputEvent *event)
             if (module && module->interceptingKeyboardInput())
                 inputIntercepted = true;
         }
+#if defined(TROPICON2026)
+        // Talks frame owns its own LEFT/RIGHT/USER_PRESS navigation
+        if (framesetInfo.positions.talks != 255 &&
+            this->ui->getUiState()->currentFrame == framesetInfo.positions.talks)
+            inputIntercepted = true;
+#endif
 
         // If no modules are using the input, move between frames
         if (!inputIntercepted) {
@@ -1767,7 +1780,12 @@ int Screen::handleInputEvent(const InputEvent *event)
 #endif
             if (event->inputEvent == INPUT_BROKER_LEFT || event->inputEvent == INPUT_BROKER_ALT_PRESS) {
                 showFrame(FrameDirection::PREVIOUS);
+#if defined(TROPICON2026)
+            // On TROPICON2026, IO18 (RIGHT) advances frames; IO40 (USER_PRESS) is SELECT
+            } else if (event->inputEvent == INPUT_BROKER_RIGHT) {
+#else
             } else if (event->inputEvent == INPUT_BROKER_RIGHT || event->inputEvent == INPUT_BROKER_USER_PRESS) {
+#endif
                 showFrame(FrameDirection::NEXT);
             } else if (event->inputEvent == INPUT_BROKER_FN_F1) {
                 this->ui->switchToFrame(0);
@@ -1798,7 +1816,11 @@ int Screen::handleInputEvent(const InputEvent *event)
             } else if ((event->inputEvent == INPUT_BROKER_UP || event->inputEvent == INPUT_BROKER_DOWN) &&
                        this->ui->getUiState()->currentFrame == framesetInfo.positions.home) {
                 cannedMessageModule->LaunchWithDestination(NODENUM_BROADCAST);
-            } else if (event->inputEvent == INPUT_BROKER_SELECT) {
+            } else if (event->inputEvent == INPUT_BROKER_SELECT
+#if defined(TROPICON2026)
+                       || event->inputEvent == INPUT_BROKER_USER_PRESS
+#endif
+                       ) {
                 if (this->ui->getUiState()->currentFrame == framesetInfo.positions.home) {
                     menuHandler::homeBaseMenu();
                 } else if (this->ui->getUiState()->currentFrame == framesetInfo.positions.system) {

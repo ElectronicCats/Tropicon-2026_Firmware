@@ -82,10 +82,10 @@
 #define SPI_FREQUENCY           2000000
 #define SPI_READ_FREQUENCY      16000000
 #define TFT_HEIGHT              428  // Physical rows  (NV3007_TFTHEIGHT)
-#define TFT_WIDTH               168  // Physical columns (NV3007_TFTWIDTH) — confirmed by test code
+#define TFT_WIDTH               142  // Physical columns (NV3007_TFTWIDTH) — confirmed by test code
 #define TFT_OFFSET_X1           12
 #define TFT_OFFSET_Y1           0
-#define TFT_OFFSET_X2           0
+#define TFT_OFFSET_X2           14
 #define TFT_OFFSET_Y2           0
 #define TFT_ROTATION            2
 #define SCREEN_TRANSITION_FRAMERATE 5
@@ -112,11 +112,22 @@
 // ⚠ IO43 is UART0 TX. It floats HIGH during boot (bootloader uses it).
 //   Do not use INPUT_PULLUP on this pin; add a 10 kΩ pull-down on the PCB.
 #define HAS_TRACKBALL 1
-#define TB_UP      40   // IO40 — same pin as BUTTON_PIN → UP / advance
+#define TB_UP     255   // No dedicated UP pin; IO40 is SELECT only — owned by ButtonThread
 #define TB_DOWN    43   // IO43 — UART TX (pull-down on PCB required)
 #define TB_LEFT     1   // IO01 — LEFT
 #define TB_RIGHT   18   // IO18 — RIGHT
-#define TB_PRESS   40   // IO40 long-press → SELECT (handled by ButtonThread)
+#define TB_PRESS  255   // IO40 press timing owned by ButtonThread, not TrackballInterruptImpl1
 
 // Trackball interrupt edge: directional buttons trigger on FALLING (active-low)
 #define TB_DIRECTION FALLING
+
+/*
+| Acción Física |   Evento   | Efecto en TalksModule         |
+|---------------|------------|-------------------------------|
+| IO40 Corto    | UserPress  | Entrar/salir vista detalle    |
+| IO40 Largo    | Select     | Ciclar interés (like/estrella)|
+| IO40 Muy Largo| SHUTDOWN   | Apagar dispositivo            |
+| IO01          | Left       | Dia anterior                  |
+| IO18          | Right      | Dia siguiente / siguiente track|
+| IO43          | Down       | Charla siguiente (scroll)     |
+*/
