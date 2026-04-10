@@ -129,6 +129,154 @@ static void rak14014_tpIntHandle(void)
 Arduino_DataBus *bus = nullptr;
 Arduino_GFX *tft = nullptr;
 
+#if defined(TROPICON2026)
+#include <PNGdec.h>
+#include "FSCommon.h"
+
+// ── PNG overlay (speaker images in TalksModule detail view) ───────────────────
+static struct {
+    bool     active    = false;
+    char     path[64]  = "";
+    int16_t  x         = 0;   // TFT absolute x of top-left
+    int16_t  y         = 0;   // TFT absolute y of top-left
+    int16_t  w         = 0;   // cached pixel width
+    int16_t  h         = 0;   // cached pixel height
+    int16_t  srcStartX = 0;   // horizontal crop offset into source image
+    int16_t  srcStartY = 0;   // vertical   crop offset into source image
+    uint16_t *pixels   = nullptr; // big-endian RGB565 pixel cache
+} s_pngOvl;
+
+// PNG object pointer: allocated on the heap only while a PNG is being decoded
+// so that the ~40 KB PNGIMAGE struct doesn't live in BSS permanently.
+static PNG  *s_pngPtr  = nullptr;
+static File  s_pngFile;
+
+static void *s_pngOpen(const char *filename, int32_t *size)
+{
+    s_pngFile = FSCom.open(filename, FILE_O_READ);
+    if (!s_pngFile)
+        return nullptr;
+    *size = s_pngFile.size();
+    return &s_pngFile;
+}
+static void    s_pngClose(void *)                            { s_pngFile.close(); }
+static int32_t s_pngRead(PNGFILE *, uint8_t *buf, int32_t n) { return s_pngFile.read(buf, n); }
+static int32_t s_pngSeek(PNGFILE *, int32_t pos)             { return s_pngFile.seek(pos) ? pos : -1; }
+
+static int s_pngDraw(PNGDRAW *pDraw)
+{
+    if (!s_pngOvl.pixels || !s_pngPtr)
+        return 1;
+
+    int dstY = (int)pDraw->y - (int)s_pngOvl.srcStartY;
+    if (dstY < 0 || dstY >= s_pngOvl.h)
+        return 1;
+
+    // Safety: refuse lines wider than our static temp buffer
+    if (pDraw->iWidth > 640)
+        return 1;
+
+    static uint16_t lineBuf[640];
+    s_pngPtr->getLineAsRGB565(pDraw, lineBuf, PNG_RGB565_LITTLE_ENDIAN, 0xFFFFFFFF);
+
+    uint16_t *dst = s_pngOvl.pixels + dstY * s_pngOvl.w;
+    int       startX = s_pngOvl.srcStartX;
+    int       copyW  = s_pngOvl.w;
+    if (startX + copyW > (int)pDraw->iWidth)
+        copyW = (int)pDraw->iWidth - startX;
+    if (copyW <= 0)
+        return 1;
+
+    // byte-swap to big-endian expected by draw16bitBeRGBBitmap
+    for (int i = 0; i < copyW; i++)
+        dst[i] = __builtin_bswap16(lineBuf[startX + i]);
+
+    return 1;
+}
+
+void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, int16_t maxW, int16_t maxH)
+{
+    if (!path || !path[0]) {
+        clearPngOverlay();
+        return;
+    }
+
+    // Skip reload if the same image is already cached
+    if (s_pngOvl.active && strncmp(s_pngOvl.path, path, sizeof(s_pngOvl.path) - 1) == 0)
+        return;
+
+    clearPngOverlay();
+
+    // Translate "data/img/..." → "/img/..." for the LittleFS root
+    char fsPath[64];
+    if (strncmp(path, "data/", 5) == 0)
+        snprintf(fsPath, sizeof(fsPath), "/%s", path + 5);
+    else if (path[0] != '/')
+        snprintf(fsPath, sizeof(fsPath), "/%s", path);
+    else
+        snprintf(fsPath, sizeof(fsPath), "%s", path);
+
+    // Allocate PNG decoder on the heap (~40 KB) only while decoding
+    s_pngPtr = new PNG();
+    if (!s_pngPtr) {
+        LOG_WARN("TFTDisplay: setPngOverlay: cannot allocate PNG decoder");
+        return;
+    }
+
+    int rc = s_pngPtr->open(fsPath, s_pngOpen, s_pngClose, s_pngRead, s_pngSeek, s_pngDraw);
+    if (rc != PNG_SUCCESS) {
+        LOG_WARN("TFTDisplay: setPngOverlay: cannot open %s (rc=%d)", fsPath, rc);
+        delete s_pngPtr;
+        s_pngPtr = nullptr;
+        return;
+    }
+
+    int16_t imgW = (int16_t)s_pngPtr->getWidth();
+    int16_t imgH = (int16_t)s_pngPtr->getHeight();
+
+    // Center-crop to fit maxW × maxH (no scaling)
+    int16_t dstW = (imgW < maxW) ? imgW : maxW;
+    int16_t dstH = (imgH < maxH) ? imgH : maxH;
+
+    size_t bufBytes = (size_t)dstW * dstH * 2;
+    s_pngOvl.pixels = (uint16_t *)malloc(bufBytes);
+    if (!s_pngOvl.pixels) {
+        LOG_WARN("TFTDisplay: setPngOverlay: out of memory (%u bytes)", (unsigned)bufBytes);
+        s_pngPtr->close();
+        delete s_pngPtr;
+        s_pngPtr = nullptr;
+        return;
+    }
+    memset(s_pngOvl.pixels, 0, bufBytes);
+
+    s_pngOvl.srcStartX = (imgW > maxW) ? (imgW - maxW) / 2 : 0;
+    s_pngOvl.srcStartY = (imgH > maxH) ? (imgH - maxH) / 2 : 0;
+    s_pngOvl.w         = dstW;
+    s_pngOvl.h         = dstH;
+    s_pngOvl.x         = centerX - dstW / 2;
+    s_pngOvl.y         = topY;
+    strncpy(s_pngOvl.path, path, sizeof(s_pngOvl.path) - 1);
+    s_pngOvl.path[sizeof(s_pngOvl.path) - 1] = '\0';
+
+    s_pngPtr->decode(nullptr, 0);
+    s_pngPtr->close();
+    delete s_pngPtr;
+    s_pngPtr = nullptr;
+
+    s_pngOvl.active = true;
+    LOG_INFO("TFTDisplay: PNG overlay loaded %s (%dx%d at %d,%d)", fsPath, dstW, dstH, s_pngOvl.x, s_pngOvl.y);
+}
+
+void TFTDisplay::clearPngOverlay()
+{
+    s_pngOvl.active = false;
+    s_pngOvl.path[0] = '\0';
+    free(s_pngOvl.pixels);
+    s_pngOvl.pixels   = nullptr;
+    s_pngOvl.w = s_pngOvl.h = 0;
+}
+#endif // TROPICON2026
+
 #elif defined(ST72xx_DE)
 #include <LovyanGFX.hpp>
 #include <TCA9534.h>
@@ -1290,6 +1438,15 @@ void TFTDisplay::display(bool fromBlank)
     // Copy the Buffer to the Back Buffer
     if (somethingChanged)
         memcpy(buffer_back, buffer, displayBufferSize);
+
+#if defined(TROPICON2026)
+    // Draw PNG overlay directly on the TFT (bypasses the 1-bit OLEDDisplay buffer).
+    // Only needed when something changed — once drawn, the overlay persists on the TFT
+    // because the image region in the OLEDDisplay buffer stays 0 and is never re-pushed.
+    if (somethingChanged && s_pngOvl.active && s_pngOvl.pixels) {
+        tft->draw16bitBeRGBBitmap(s_pngOvl.x, s_pngOvl.y, s_pngOvl.pixels, s_pngOvl.w, s_pngOvl.h);
+    }
+#endif
 }
 
 void TFTDisplay::sdlLoop()

@@ -65,7 +65,7 @@
     "Track 1": "TBD",
     "Ponente": "Checkmarx",
     "ImagenTrack1": "data/img/checkmarx.png",
-    "Track Villas": "TBD",
+    "Track Villas": "Vibe Hacking Google",
     "Ponente.1": "Eduardo Vela",
     "ImagenVillas": "data/img/EduardoVela.png"
   },
@@ -146,8 +146,8 @@
     "Ponente": "DragonJar",
     "ImagenTrack1": "data/img/dragonjar.png",
     "Track Villas": "TBD",
-    "Ponente.1": "NahamSec",
-    "ImagenVillas": "data/img/Nahamsec.png"
+    "Ponente.1": "Eduardo Contreras",
+    "ImagenVillas": "data/img/Wero.png"
   },
   {
     "Día": "Sábado",
@@ -175,9 +175,9 @@
     "Track 1": "Mesa Redonda: Comunidades de Seguridad",
     "Ponente": "",
     "ImagenTrack1": "",
-    "Track Villas": "TBD",
-    "Ponente.1": "RF Village",
-    "ImagenVillas": "data/img/RFVillage.png"
+    "Track Villas": "Entendiendo y capturando ADS-B a 1090 MHz",
+    "Ponente.1": "Alejandro Sanchez",
+    "ImagenVillas": "data/img/AlejandroSanchez.png"
   },
   {
     "Día": "Sábado",
@@ -185,9 +185,9 @@
     "Track 1": "Después del leak: Convirtiendo la negación en investigación",
     "Ponente": "Ignacio Gómez Villaseñor",
     "ImagenTrack1": "",
-    "Track Villas": "TBD",
-    "Ponente.1": "Payment Village",
-    "ImagenVillas": "data/img/PaymentVillage.png"
+    "Track Villas": "Telecom Security 101",
+    "Ponente.1": "Raúl Sandoval",
+    "ImagenVillas": "data/img/RaulSandoval.png"
   },
   {
     "Día": "Sábado",

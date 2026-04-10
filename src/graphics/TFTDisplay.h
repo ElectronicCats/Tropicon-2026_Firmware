@@ -52,6 +52,22 @@ class TFTDisplay : public OLEDDisplay
      */
     static GpioPin *backlightEnable;
 
+#if defined(TROPICON2026)
+    /**
+     * Decode a PNG from the filesystem and cache it as an RGB565 overlay drawn
+     * directly on the TFT after each display() call.  The image is center-cropped
+     * (not scaled) to fit within maxW × maxH.  Call clearPngOverlay() to remove it.
+     *
+     * @param path     Filesystem path, e.g. "data/img/Foo.png" or "/img/Foo.png"
+     * @param centerX  Horizontal center of the target area (TFT absolute coords)
+     * @param topY     Top-left Y of the target area (TFT absolute coords)
+     * @param maxW     Maximum rendered width in pixels
+     * @param maxH     Maximum rendered height in pixels
+     */
+    static void setPngOverlay(const char *path, int16_t centerX, int16_t topY, int16_t maxW, int16_t maxH);
+    static void clearPngOverlay();
+#endif
+
   protected:
     // the header size of the buffer used, e.g. for the SPI command header
     virtual int getBufferOffset(void) override { return 0; }

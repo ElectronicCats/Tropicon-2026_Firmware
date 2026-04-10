@@ -3,6 +3,7 @@
 #include "modules/TalksModule.h"
 #include "graphics/Screen.h"
 #include "graphics/ScreenFonts.h"
+#include "graphics/TFTDisplay.h"
 #include "main.h"
 
 namespace graphics {
@@ -18,6 +19,9 @@ void TalksRenderer::drawFrame(OLEDDisplay *display, OLEDDisplayUiState *state, i
 }
 
 void TalksRenderer::drawTalkList(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y) {
+    // Remove any PNG overlay when showing the list
+    TFTDisplay::clearPngOverlay();
+
     auto days = ::talksModule->getDays();
     if (days.empty()) {
         display->setTextAlignment(TEXT_ALIGN_CENTER);
@@ -100,27 +104,50 @@ void TalksRenderer::drawTalkDetail(OLEDDisplay *display, OLEDDisplayUiState *sta
     auto stages = ::talksModule->getStages(currentDay);
     std::string currentStage = stages[::talksModule->currentStageIndex];
     auto talkIndices = ::talksModule->getFilteredTalkIndices(currentDay, currentStage);
-    
+
     if (::talksModule->currentTalkIndex >= talkIndices.size()) return;
-    
+
     int idx = talkIndices[::talksModule->currentTalkIndex];
     const auto& talk = ::talksModule->getTalks()[idx];
 
+    // ── Image area constants ─────────────────────────────────────────────────
+    // Reserve y+48 … y+189 (142 px tall) for the speaker image.
+    // The OLEDDisplay buffer stays 0 (black) there so display() never overwrites
+    // the PNG that TFTDisplay draws directly onto the TFT each changed frame.
+    const int IMG_TOP    = y + 48;
+    const int IMG_HEIGHT = 142;  // fits 130 px tall portrait + small margin
+    const int IMG_BOTTOM = IMG_TOP + IMG_HEIGHT;
+    const int IMG_CENTER_X = x + display->getWidth() / 2;  // 71 px
+
+    // ── Header ───────────────────────────────────────────────────────────────
     display->setTextAlignment(TEXT_ALIGN_LEFT);
-    
-    // Header
+
     display->setFont(FONT_MEDIUM);
     display->drawString(x + 4, y + 4, talk.title.c_str());
-    
-    display->setFont(FONT_SMALL);
-    display->drawString(x + 4, y + 24, talk.speaker.c_str());
-    display->drawString(x + 4, y + 36, (talk.time + " @ " + talk.stage).c_str());
-    
-    display->drawHorizontalLine(x, y + 50, display->getWidth());
 
-    // Title with word-wrap (title can be long)
     display->setFont(FONT_SMALL);
-    int descY = y + 56;
+    display->drawString(x + 4, y + 20, talk.speaker.c_str());
+    display->drawString(x + 4, y + 32, (talk.time + " @ " + talk.stage).c_str());
+    display->drawHorizontalLine(x, y + 44, display->getWidth());
+
+    // ── Speaker image ────────────────────────────────────────────────────────
+    // Request PNG overlay; TFTDisplay handles decode, cache and blit.
+    // If the talk has no image the overlay is cleared (no image shown).
+    if (!talk.image.empty()) {
+        TFTDisplay::setPngOverlay(talk.image.c_str(), IMG_CENTER_X, IMG_TOP,
+                                  display->getWidth(), IMG_HEIGHT);
+    } else {
+        TFTDisplay::clearPngOverlay();
+    }
+    // Draw a placeholder border so the OLEDDisplay buffer has the correct
+    // bounding box and display() will flush the image area to TFT_BLACK on
+    // the very first frame (before the PNG overlay is drawn on top).
+    display->drawRect(x, IMG_TOP, display->getWidth(), IMG_HEIGHT);
+
+    // ── Description (word-wrapped title) ─────────────────────────────────────
+    display->drawHorizontalLine(x, IMG_BOTTOM + 2, display->getWidth());
+    display->setFont(FONT_SMALL);
+    int descY = IMG_BOTTOM + 6;
     String title = talk.title.c_str();
     int lineStart = 0;
     while (lineStart < (int)title.length() && descY < display->getHeight() - 36) {
@@ -136,13 +163,13 @@ void TalksRenderer::drawTalkDetail(OLEDDisplay *display, OLEDDisplayUiState *sta
         descY += 12;
     }
 
-    // Footer - Interest selection
+    // ── Footer – interest selection ───────────────────────────────────────────
     int footerY = display->getHeight() - 30;
     display->drawHorizontalLine(x, footerY - 2, display->getWidth());
-    const char* interestLabels[] = {"None", "Asistir", "Tal vez", "Saltar"};
+    const char *interestLabels[] = {"None", "Asistir", "Tal vez", "Saltar"};
     display->setTextAlignment(TEXT_ALIGN_CENTER);
-    display->drawString(x + display->getWidth() / 2, footerY, 
-        (String("Status: ") + interestLabels[talk.interest]).c_str());
+    display->drawString(x + display->getWidth() / 2, footerY,
+                        (String("Status: ") + interestLabels[talk.interest]).c_str());
     display->drawString(x + display->getWidth() / 2, footerY + 12, "Select to change");
 }
 
