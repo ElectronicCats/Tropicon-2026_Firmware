@@ -126,12 +126,28 @@
 #define TB_DIRECTION FALLING
 
 /*
-| Acción Física |   Evento   | Efecto en TalksModule         |
-|---------------|------------|-------------------------------|
-| IO40 Corto    | UserPress  | Entrar/salir vista detalle    |
-| IO40 Largo    | Select     | Ciclar interés (like/estrella)|
-| IO40 Muy Largo| SHUTDOWN   | Apagar dispositivo            |
-| IO01          | Left       | Dia anterior                  |
-| IO18          | Right      | Dia siguiente / siguiente track|
-| IO43          | Down       | Charla siguiente (scroll)     |
+Esquema de navegación TalksModule — 4 botones físicos
+═══════════════════════════════════════════════════════════════════════════════
+
+Vista LISTA (inDetailView = false):
+| Acción Física |   Evento   | Efecto                                         |
+|---------------|------------|------------------------------------------------|
+| IO40 Corto    | UserPress  | Plática anterior ↑; si es la primera → menú   |
+| IO43          | Down       | Plática siguiente ↓                            |
+| IO01          | Left       | Día anterior (cíclico)                         |
+| IO18          | Right      | Siguiente stage; si último → siguiente día     |
+| IO40 Largo    | Select     | Entrar a vista detalle                         |
+| IO40 Muy Largo| SHUTDOWN   | Apagar dispositivo                             |
+
+Vista DETALLE (inDetailView = true):
+| Acción Física |   Evento   | Efecto                                     |
+|---------------|------------|--------------------------------------------|
+| IO40 Corto    | UserPress  | Salir a lista                              |
+| IO43          | Down       | Plática siguiente (permanece en detalle)   |
+| IO01          | Left       | Plática anterior (cambia stage/día si es   |
+|               |            | la primera del stage actual)               |
+| IO18          | Right      | Plática siguiente (cambia stage/día si es  |
+|               |            | la última del stage actual)                |
+| IO40 Largo    | Select     | Ciclar interés (like / estrella / saltar)  |
+| IO40 Muy Largo| SHUTDOWN   | Apagar dispositivo                         |
 */

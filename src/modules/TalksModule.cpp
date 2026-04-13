@@ -250,6 +250,28 @@ vector<int> TalksModule::getFilteredTalkIndices(const string& day, const string&
 }
 
 // ── Input handler ─────────────────────────────────────────────────────────────
+//
+// Esquema de navegación con 4 botones físicos:
+//
+//   Botón UP (IO40) — pulsación corta → INPUT_BROKER_USER_PRESS
+//   Botón UP (IO40) — pulsación larga → INPUT_BROKER_SELECT
+//   Botón DOWN (IO43)                 → INPUT_BROKER_DOWN
+//   Botón LEFT (IO01)                 → INPUT_BROKER_LEFT
+//   Botón RIGHT (IO18)                → INPUT_BROKER_RIGHT
+//
+// Vista lista (inDetailView = false):
+//   UP corto  → plática anterior ↑ (no se sale de la lista)
+//   DOWN      → plática siguiente ↓
+//   LEFT      → día anterior (cíclico)
+//   RIGHT     → siguiente stage; si es el último → siguiente día
+//   UP largo  → entrar a vista detalle
+//
+// Vista detalle (inDetailView = true):
+//   UP corto  → salir a lista
+//   DOWN      → siguiente plática (permanece en detalle)
+//   LEFT      → plática anterior (permanece en detalle; cambia stage/día si es necesario)
+//   RIGHT     → siguiente plática (permanece en detalle; cambia stage/día si es necesario)
+//   UP largo  → ciclar interés (like / estrella / saltar)
 
 int TalksModule::handleInputEvent(const InputEvent *event)
 {
@@ -272,20 +294,61 @@ int TalksModule::handleInputEvent(const InputEvent *event)
     auto talkIndices = getFilteredTalkIndices(days[currentDayIndex], stages[currentStageIndex]);
     int  numTalks    = (int)talkIndices.size();
 
-    if (event->inputEvent == INPUT_BROKER_UP) {
-        if (!inDetailView && currentTalkIndex > 0) currentTalkIndex--;
+    // UP corto (USER_PRESS):
+    //   Lista   → plática anterior ↑; si ya estamos en la primera → menú principal
+    //   Detalle → salir a lista
+    if (event->inputEvent == INPUT_BROKER_USER_PRESS) {
+        if (inDetailView) {
+            inDetailView = false;
+        } else {
+            if (currentTalkIndex > 0) {
+                currentTalkIndex--;
+            } else {
+                // Ya estamos en la primera plática: UP sale al menú principal
+                screen->setFrames(graphics::Screen::FOCUS_DEFAULT);
+            }
+        }
         screen->runNow();
         return 1;
     }
 
+    // DOWN:
+    //   Lista   → plática siguiente ↓
+    //   Detalle → plática siguiente (permanece en detalle)
     if (event->inputEvent == INPUT_BROKER_DOWN) {
-        if (!inDetailView && currentTalkIndex < numTalks - 1) currentTalkIndex++;
+        if (currentTalkIndex < numTalks - 1) {
+            currentTalkIndex++;
+        }
         screen->runNow();
         return 1;
     }
 
+    // LEFT:
+    //   Lista   → día anterior (cíclico), resetea stage y plática
+    //   Detalle → plática anterior; si es la primera del stage → stage/día anterior
     if (event->inputEvent == INPUT_BROKER_LEFT) {
-        if (!inDetailView) {
+        if (inDetailView) {
+            if (currentTalkIndex > 0) {
+                currentTalkIndex--;
+            } else if (currentStageIndex > 0) {
+                currentStageIndex--;
+                auto prevIndices = getFilteredTalkIndices(days[currentDayIndex], stages[currentStageIndex]);
+                currentTalkIndex = (int)prevIndices.size() - 1;
+                if (currentTalkIndex < 0) currentTalkIndex = 0;
+            } else {
+                currentDayIndex = (currentDayIndex - 1 + numDays) % numDays;
+                auto newStages  = getStages(days[currentDayIndex]);
+                currentStageIndex = (int)newStages.size() - 1;
+                if (currentStageIndex < 0) currentStageIndex = 0;
+                if (!newStages.empty()) {
+                    auto prevIndices = getFilteredTalkIndices(days[currentDayIndex], newStages[currentStageIndex]);
+                    currentTalkIndex = (int)prevIndices.size() - 1;
+                    if (currentTalkIndex < 0) currentTalkIndex = 0;
+                } else {
+                    currentTalkIndex = 0;
+                }
+            }
+        } else {
             currentDayIndex = (currentDayIndex - 1 + numDays) % numDays;
             auto newStages = getStages(days[currentDayIndex]);
             if (currentStageIndex >= (int)newStages.size()) currentStageIndex = 0;
@@ -295,8 +358,22 @@ int TalksModule::handleInputEvent(const InputEvent *event)
         return 1;
     }
 
+    // RIGHT:
+    //   Lista   → siguiente stage; si es el último → siguiente día
+    //   Detalle → plática siguiente; si es la última del stage → stage/día siguiente
     if (event->inputEvent == INPUT_BROKER_RIGHT) {
-        if (!inDetailView) {
+        if (inDetailView) {
+            if (currentTalkIndex < numTalks - 1) {
+                currentTalkIndex++;
+            } else if (currentStageIndex < numStages - 1) {
+                currentStageIndex++;
+                currentTalkIndex = 0;
+            } else {
+                currentDayIndex   = (currentDayIndex + 1) % numDays;
+                currentStageIndex = 0;
+                currentTalkIndex  = 0;
+            }
+        } else {
             if (numStages > 1 && currentStageIndex < numStages - 1) {
                 currentStageIndex++;
             } else {
@@ -309,19 +386,9 @@ int TalksModule::handleInputEvent(const InputEvent *event)
         return 1;
     }
 
-    // USER_PRESS: pulsación corta de BUTTON_PIN (IO40) — alterna vista detalle
-    if (event->inputEvent == INPUT_BROKER_USER_PRESS) {
-        if (inDetailView) {
-            inDetailView = false;
-        } else {
-            if (numTalks > 0) inDetailView = true;
-        }
-        screen->runNow();
-        return 1;
-    }
-
-    // SELECT: pulsación larga de BUTTON_PIN (IO40, ≥500 ms)
-    // — en detalle: cicla el interés; en lista: sale al menú principal
+    // UP largo (SELECT):
+    //   Lista   → entrar a vista detalle
+    //   Detalle → ciclar interés (0→1→2→3→0)
     if (event->inputEvent == INPUT_BROKER_SELECT) {
         if (inDetailView) {
             if (numTalks > 0 && currentTalkIndex < numTalks) {
@@ -329,7 +396,7 @@ int TalksModule::handleInputEvent(const InputEvent *event)
                 saveInterest(talks[idx].id, (talks[idx].interest + 1) % 4);
             }
         } else {
-            screen->setFrames(graphics::Screen::FOCUS_DEFAULT);
+            if (numTalks > 0) inDetailView = true;
         }
         screen->runNow();
         return 1;
@@ -346,7 +413,7 @@ int TalksModule::handleInputEvent(const InputEvent *event)
         return 1;
     }
 
-    // SELECT_LONG: exit to main screen from any level
+    // SELECT_LONG: salir al menú principal desde cualquier nivel
     if (event->inputEvent == INPUT_BROKER_SELECT_LONG) {
         inDetailView = false;
         screen->setFrames(graphics::Screen::FOCUS_DEFAULT);
