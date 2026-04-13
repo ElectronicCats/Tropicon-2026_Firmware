@@ -202,12 +202,18 @@ void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, 
         return;
     }
 
-    // ── Center-crop to fit maxW × maxH (no scaling) ──────────────────────────
+    // ── Position and center-crop to fit maxW × maxH (no scaling) ──────────────
     int16_t dstW  = (imgW < maxW) ? (int16_t)imgW : maxW;
     int16_t dstH  = (imgH < maxH) ? (int16_t)imgH : maxH;
-    int16_t srcX0 = (imgW > maxW) ? (imgW - maxW) / 2 : 0;  // first source column
-    int16_t srcY0 = (imgH > maxH) ? (imgH - maxH) / 2 : 0;  // first source row (top-down coords)
-    int16_t dstX  = centerX - dstW / 2;
+    int16_t srcX0 = (imgW > maxW) ? (imgW - maxW) / 2 : 0;  // first source column (crop)
+    int16_t srcY0 = (imgH > maxH) ? (imgH - maxH) / 2 : 0;  // first source row (crop)
+
+    // Right-align by default with a small margin
+    int16_t dstX  = maxW - dstW - 1;
+    if (dstX < 2) dstX = 2; // Keep at least a small margin for the border
+
+    // Center vertically within the reserved maxH area
+    int16_t renderTopY = (topY + (maxH - dstH) / 2) - 30;
 
     // Row stride: each BMP row is padded to a 4-byte boundary
     uint32_t stride = ((uint32_t)imgW * 3 + 3) & ~3u;
@@ -216,7 +222,8 @@ void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, 
     static uint8_t  rowBuf[640 * 3];
     static uint16_t lineBuf[640];
 
-    LOG_INFO("TFTDisplay: Drawing BMP overlay to TFT GRAM: %s (%dx%d, render %dx%d)", fsPath, (int)imgW, (int)imgH, (int)dstW, (int)dstH);
+    LOG_INFO("TFTDisplay: Drawing BMP overlay to TFT GRAM: %s (%dx%d, render %dx%d at %d,%d)",
+             fsPath, (int)imgW, (int)imgH, (int)dstW, (int)dstH, (int)dstX, (int)renderTopY);
 
     // ── Read one row at a time, convert BGR→RGB565, push to TFT ─────────────
     for (int16_t row = 0; row < dstH; row++) {
@@ -237,24 +244,31 @@ void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, 
             lineBuf[col] = __builtin_bswap16(rgb565);
         }
 
-        tft->draw16bitBeRGBBitmap(dstX, topY + row, lineBuf, dstW, 1);
+        tft->draw16bitBeRGBBitmap(dstX, renderTopY + row, lineBuf, dstW, 1);
     }
+
+    // Draw themed border (1px outside the image)
+    tft->drawRect(dstX - 1, renderTopY - 1, dstW + 2, dstH + 2, TFT_MESH);
 
     f.close();
 
     strncpy(s_bmpOvl.path, path, sizeof(s_bmpOvl.path) - 1);
     s_bmpOvl.path[sizeof(s_bmpOvl.path) - 1] = '\0';
-    s_bmpOvl.x      = dstX;
-    s_bmpOvl.y      = topY;
-    s_bmpOvl.w      = dstW;
-    s_bmpOvl.h      = dstH;
+    s_bmpOvl.x      = dstX - 1;
+    s_bmpOvl.y      = renderTopY - 1;
+    s_bmpOvl.w      = dstW + 2;
+    s_bmpOvl.h      = dstH + 2;
     s_bmpOvl.active = true;
 
-    LOG_INFO("TFTDisplay: BMP overlay pushed to hardware at (%d,%d) %dx%d", dstX, topY, dstW, dstH);
+    LOG_INFO("TFTDisplay: BMP overlay pushed to hardware at (%d,%d) %dx%d (with border)",
+             s_bmpOvl.x, s_bmpOvl.y, s_bmpOvl.w, s_bmpOvl.h);
 }
 
 void TFTDisplay::clearPngOverlay()
 {
+    if (s_bmpOvl.active && tft && s_bmpOvl.w > 0 && s_bmpOvl.h > 0) {
+        tft->fillRect(s_bmpOvl.x, s_bmpOvl.y, s_bmpOvl.w, s_bmpOvl.h, TFT_BLACK);
+    }
     s_bmpOvl.active  = false;
     s_bmpOvl.w       = 0;
     s_bmpOvl.h       = 0;
@@ -1327,8 +1341,15 @@ TFTDisplay::~TFTDisplay()
 // Write the buffer to the display memory
 void TFTDisplay::display(bool fromBlank)
 {
-    if (fromBlank)
+    if (fromBlank) {
         tft->fillScreen(TFT_BLACK);
+#if defined(TROPICON2026)
+        // fillScreen() erases TFT GRAM entirely, so the cached BMP overlay is
+        // gone. Invalidate the cache so the next setPngOverlay() call redraws it.
+        s_bmpOvl.active  = false;
+        s_bmpOvl.path[0] = '\0';
+#endif
+    }
 
     concurrency::LockGuard g(spiLock);
 

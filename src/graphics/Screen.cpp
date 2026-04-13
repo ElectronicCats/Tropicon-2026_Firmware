@@ -159,6 +159,9 @@ void Screen::showOverlayBanner(BannerOverlayOptions banner_overlay_options)
 #ifdef USE_EINK
     EINK_ADD_FRAMEFLAG(dispdev, DEMAND_FAST); // Skip full refresh for all overlay menus
 #endif
+#if defined(TROPICON2026)
+    TFTDisplay::clearPngOverlay();
+#endif
     // Store the message and set the expiration timestamp
     strncpy(NotificationRenderer::alertBannerMessage, banner_overlay_options.message, 255);
     NotificationRenderer::alertBannerMessage[255] = '\0'; // Ensure null termination
@@ -183,6 +186,9 @@ void Screen::showNodePicker(const char *message, uint32_t durationMs, std::funct
 #ifdef USE_EINK
     EINK_ADD_FRAMEFLAG(dispdev, DEMAND_FAST); // Skip full refresh for all overlay menus
 #endif
+#if defined(TROPICON2026)
+    TFTDisplay::clearPngOverlay();
+#endif
     nodeDB->pause_sort(true);
     // Store the message and set the expiration timestamp
     strncpy(NotificationRenderer::alertBannerMessage, message, 255);
@@ -206,6 +212,9 @@ void Screen::showNumberPicker(const char *message, uint32_t durationMs, uint8_t 
 #ifdef USE_EINK
     EINK_ADD_FRAMEFLAG(dispdev, DEMAND_FAST); // Skip full refresh for all overlay menus
 #endif
+#if defined(TROPICON2026)
+    TFTDisplay::clearPngOverlay();
+#endif
     // Store the message and set the expiration timestamp
     strncpy(NotificationRenderer::alertBannerMessage, message, 255);
     NotificationRenderer::alertBannerMessage[255] = '\0'; // Ensure null termination
@@ -227,6 +236,10 @@ void Screen::showTextInput(const char *header, const char *initialText, uint32_t
                            std::function<void(const std::string &)> textCallback)
 {
     LOG_INFO("showTextInput called with header='%s', durationMs=%d", header ? header : "NULL", durationMs);
+
+#if defined(TROPICON2026)
+    TFTDisplay::clearPngOverlay();
+#endif
 
     // Start OnScreenKeyboardModule session (non-touch variant)
     OnScreenKeyboardModule::instance().start(header, initialText, durationMs, textCallback);
@@ -794,7 +807,9 @@ int32_t Screen::runOnce()
         int8_t textMsgIndex = framesetInfo.positions.textMessage;
 
         if (lastFrameIndex != -1 && currentFrameIndex != lastFrameIndex) {
-
+#if defined(TROPICON2026)
+            TFTDisplay::clearPngOverlay();
+#endif
             if (lastFrameIndex == textMsgIndex && currentFrameIndex != textMsgIndex) {
                 graphics::MessageRenderer::clearMessageCache();
             }
@@ -880,6 +895,11 @@ int32_t Screen::runOnce()
             EINK_ADD_FRAMEFLAG(dispdev, DEMAND_FAST); // Use fast-refresh for next frame, no skip please
             EINK_ADD_FRAMEFLAG(dispdev, BLOCKING);    // Edge case: if this frame is promoted to COSMETIC, wait for update
             handleSetOn(true); // Ensure power-on to receive deep-sleep screensaver (PowerFSM should handle?)
+#endif
+#if defined(TROPICON2026)
+            // Clear the BMP overlay so the alert frame is not occluded by
+            // the speaker image that was left in TFT GRAM from the Talks view.
+            TFTDisplay::clearPngOverlay();
 #endif
             setFrameImmediateDraw(alertFrames);
             break;
