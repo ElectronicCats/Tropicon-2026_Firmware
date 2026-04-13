@@ -562,6 +562,9 @@ void NodeDB::installDefaultConfig(bool preserveKey = false)
     config.has_bluetooth = (HAS_BLUETOOTH ? true : false);
     config.has_security = true;
     config.device.rebroadcast_mode = meshtastic_Config_DeviceConfig_RebroadcastMode_ALL;
+#ifdef TROPICON2026
+    strncpy(config.device.tzdef, "CST6", sizeof(config.device.tzdef));
+#endif
 
     config.lora.sx126x_rx_boosted_gain = true;
     config.lora.tx_enabled =
@@ -818,6 +821,11 @@ void NodeDB::installDefaultModuleConfig()
     moduleConfig.has_serial = true;
     moduleConfig.has_store_forward = true;
     moduleConfig.has_telemetry = true;
+#ifdef TROPICON2026
+    moduleConfig.telemetry.environment_measurement_enabled = true;
+    moduleConfig.telemetry.environment_screen_enabled = true;
+    moduleConfig.telemetry.environment_update_interval = 60; // 1 minute
+#endif
     moduleConfig.has_external_notification = true;
 #if defined(PIN_BUZZER) || defined(PIN_VIBRATION) || defined(LED_NOTIFICATION)
     moduleConfig.external_notification.enabled = true;

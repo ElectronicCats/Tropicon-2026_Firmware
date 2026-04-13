@@ -95,7 +95,7 @@
 #define SCREEN_TRANSITION_FRAMERATE 5
 #define HAS_SCREEN              1
 #define TFT_BLACK               0
-#define BRIGHTNESS_DEFAULT      300  // Medium Low Brightness
+#define BRIGHTNESS_DEFAULT      254  // H = 254, MH = 192, ML = 130 L = 103
 #define USE_TFTDISPLAY          1
 
 //#define USE_POWERSAVE
