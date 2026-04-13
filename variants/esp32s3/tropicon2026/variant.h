@@ -86,15 +86,16 @@
 #define SPI_READ_FREQUENCY      16000000
 #define TFT_HEIGHT              428  // Physical rows  (NV3007_TFTHEIGHT)
 #define TFT_WIDTH               142  // Physical columns (NV3007_TFTWIDTH) — confirmed by test code
-#define TFT_OFFSET_X1           12
+#define TFT_OFFSET_X1           12  // 12
 #define TFT_OFFSET_Y1           0
-#define TFT_OFFSET_X2           14
+#define TFT_OFFSET_X2           14  // 14
 #define TFT_OFFSET_Y2           0
-#define TFT_ROTATION            2
+#define SCREEN_ROTATE           // Add this to swap logical dimensions for Meshtastic UI
+#define TFT_ROTATION            1
 #define SCREEN_TRANSITION_FRAMERATE 5
 #define HAS_SCREEN              1
 #define TFT_BLACK               0
-#define BRIGHTNESS_DEFAULT      130  // Medium Low Brightness
+#define BRIGHTNESS_DEFAULT      300  // Medium Low Brightness
 #define USE_TFTDISPLAY          1
 
 //#define USE_POWERSAVE
