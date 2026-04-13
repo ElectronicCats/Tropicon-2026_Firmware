@@ -33,22 +33,22 @@
     "Taller #1: Salón Maya": {
       "Taller": "Top 10 LLM OWASP",
       "Tallerista": "Jean Granados",
-      "ImgTaller1": "data/img/JeanPaul.png"
+      "ImgTaller1": "data/img/JeanPaul.bmp"
     },
     "Taller #2: Salón la Isla": {
       "Taller": "Ingeniería de Detección Moderna Para Ciberdefensores",
       "Tallerista": "David Michelena",
-      "ImgTaller2": "data/img/DavidBernal.png"
+      "ImgTaller2": "data/img/DavidBernal.bmp"
     },
     "Taller #3: Suite 1": {
       "Taller": "Introducción a la Explotación de Binarios Windows x86",
       "Tallerista": "Angel Gangas",
-      "ImgTaller3": "data/img/AngelGangas.png"
+      "ImgTaller3": "data/img/AngelGangas.bmp"
     },
     "Taller #4: Suite 2": {
       "Taller": "Advanced Web Hacking",
       "Tallerista": "Marco Almanguer",
-      "ImgTaller4": "data/img/MarcoAlmaguer.png"
+      "ImgTaller4": "data/img/MarcoAlmaguer.bmp"
     }
   },
   {
@@ -58,22 +58,22 @@
     "Taller #1: Salón Maya": {
       "Taller": "OSINT",
       "Tallerista": "Omar Espino",
-      "ImgTaller1": "data/img/OmarEspino.png"
+      "ImgTaller1": "data/img/OmarEspino.bmp"
     },
     "Taller #2: Salón la Isla": {
       "Taller": "Ingeniería de Detección Moderna Para Ciberdefensores",
       "Tallerista": "David Michelena",
-      "ImgTaller2": "data/img/DavidBernal.png"
+      "ImgTaller2": "data/img/DavidBernal.bmp"
     },
     "Taller #3: Suite 1": {
       "Taller": "Introducción a la Explotación de Binarios Windows x86",
       "Tallerista": "Angel Gangas",
-      "ImgTaller3": "data/img/AngelGangas.png"
+      "ImgTaller3": "data/img/AngelGangas.bmp"
     },
     "Taller #4: Suite 2": {
       "Taller": "Advanced Web Hacking",
       "Tallerista": "Marco Almanguer",
-      "ImgTaller4": "data/img/MarcoAlmaguer.png"
+      "ImgTaller4": "data/img/MarcoAlmaguer.bmp"
     }
   },
   {
@@ -92,22 +92,22 @@
     "Taller #1: Salón Maya": {
       "Taller": "Top 10 LLM OWASP",
       "Tallerista": "Jean Granados",
-      "ImgTaller1": "data/img/JeanPaul.png"
+      "ImgTaller1": "data/img/JeanPaul.bmp"
     },
     "Taller #2: Salón la Isla": {
       "Taller": "Ingeniería de Detección Moderna Para Ciberdefensores",
       "Tallerista": "David Michelena",
-      "ImgTaller2": "data/img/DavidBernal.png"
+      "ImgTaller2": "data/img/DavidBernal.bmp"
     },
     "Taller #3: Suite 1": {
       "Taller": "Introducción a la Explotación de Binarios Windows x86",
       "Tallerista": "Angel Gangas",
-      "ImgTaller3": "data/img/AngelGangas.png"
+      "ImgTaller3": "data/img/AngelGangas.bmp"
     },
     "Taller #4: Suite 2": {
       "Taller": "Flipper Zero Hacking 101",
       "Tallerista": "Mariano Marino",
-      "ImgTaller4": "data/img/MarcoAlmaguer.png"
+      "ImgTaller4": "data/img/MarianoMarino.bmp"
     }
   },
   {
@@ -117,17 +117,17 @@
     "Taller #1: Salón Maya": {
       "Taller": "OSINT",
       "Tallerista": "Omar Espino",
-      "ImgTaller1": "data/img/OmarEspino.png"
+      "ImgTaller1": "data/img/OmarEspino.bmp"
     },
     "Taller #2: Salón la Isla": {
       "Taller": "Ingeniería de Detección Moderna Para Ciberdefensores",
       "Tallerista": "David Michelena",
-      "ImgTaller2": "data/img/DavidBernal.png"
+      "ImgTaller2": "data/img/DavidBernal.bmp"
     },
     "Taller #3: Suite 1": {
       "Taller": "Introducción a la Explotación de Binarios Windows x86",
       "Tallerista": "Angel Gangas",
-      "ImgTaller3": "data/img/AngelGangas.png"
+      "ImgTaller3": "data/img/AngelGangas.bmp"
     },
     "Taller #4: Suite 2": { "Taller": "", "Tallerista": "", "ImgTaller4": "" }
   },
@@ -138,7 +138,7 @@
     "Taller #1: Salón Maya": {
       "Taller": "OSINT",
       "Tallerista": "Omar Espino",
-      "ImgTaller1": "data/img/OmarEspino.png"
+      "ImgTaller1": "data/img/OmarEspino.bmp"
     },
     "Taller #2: Salón la Isla": { "Taller": "", "Tallerista": "", "ImgTaller2": "" },
     "Taller #3: Suite 1": { "Taller": "", "Tallerista": "", "ImgTaller3": "" },

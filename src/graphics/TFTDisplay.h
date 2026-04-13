@@ -54,11 +54,13 @@ class TFTDisplay : public OLEDDisplay
 
 #if defined(TROPICON2026)
     /**
-     * Decode a PNG from the filesystem and cache it as an RGB565 overlay drawn
-     * directly on the TFT after each display() call.  The image is center-cropped
-     * (not scaled) to fit within maxW × maxH.  Call clearPngOverlay() to remove it.
+     * Read an uncompressed 24-bit BMP from the filesystem and push it as an
+     * RGB565 overlay directly into the TFT's GRAM.  The image is center-cropped
+     * (not scaled) to fit within maxW × maxH.  Subsequent display() calls skip
+     * those coordinates so the image persists without a repaint.
+     * Call clearPngOverlay() to remove it.
      *
-     * @param path     Filesystem path, e.g. "data/img/Foo.png" or "/img/Foo.png"
+     * @param path     Filesystem path, e.g. "data/img/Foo.bmp" or "/img/Foo.bmp"
      * @param centerX  Horizontal center of the target area (TFT absolute coords)
      * @param topY     Top-left Y of the target area (TFT absolute coords)
      * @param maxW     Maximum rendered width in pixels

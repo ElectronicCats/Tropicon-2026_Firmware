@@ -130,69 +130,20 @@ Arduino_DataBus *bus = nullptr;
 Arduino_GFX *tft = nullptr;
 
 #if defined(TROPICON2026)
-#include <PNGdec.h>
 #include "FSCommon.h"
 
-// ── PNG overlay (speaker images in TalksModule detail view) ───────────────────
+// ── BMP overlay (speaker images in TalksModule detail view) ──────────────────
+// Uncompressed 24-bit BMP files are read row-by-row directly from flash and
+// pushed to the TFT's GRAM once.  No heap allocation or zlib decompression is
+// needed, so this is significantly lighter on RAM than the former PNGdec path.
 static struct {
-    bool     active    = false;
-    char     path[64]  = "";
-    int16_t  x         = 0;   // TFT absolute x of top-left
-    int16_t  y         = 0;   // TFT absolute y of top-left
-    int16_t  w         = 0;   // cached pixel width
-    int16_t  h         = 0;   // cached pixel height
-    int16_t  srcStartX = 0;   // horizontal crop offset into source image
-    int16_t  srcStartY = 0;   // vertical   crop offset into source image
-} s_pngOvl;
-
-// PNG object pointer: allocated on the heap only while a PNG is being decoded
-// so that the ~40 KB PNGIMAGE struct doesn't live in BSS permanently.
-static PNG  *s_pngPtr  = nullptr;
-static File  s_pngFile;
-
-static void *s_pngOpen(const char *filename, int32_t *size)
-{
-    s_pngFile = FSCom.open(filename, FILE_O_READ);
-    if (!s_pngFile)
-        return nullptr;
-    *size = s_pngFile.size();
-    return &s_pngFile;
-}
-static void    s_pngClose(void *)                            { s_pngFile.close(); }
-static int32_t s_pngRead(PNGFILE *, uint8_t *buf, int32_t n) { return s_pngFile.read(buf, n); }
-static int32_t s_pngSeek(PNGFILE *, int32_t pos)             { return s_pngFile.seek(pos) ? pos : -1; }
-
-static int s_pngDraw(PNGDRAW *pDraw)
-{
-    if (!s_pngPtr)
-        return 1;
-
-    int dstY = (int)pDraw->y - (int)s_pngOvl.srcStartY;
-    if (dstY < 0 || dstY >= s_pngOvl.h)
-        return 1;
-
-    // Safety: refuse lines wider than our static temp buffer
-    if (pDraw->iWidth > 640)
-        return 1;
-
-    static uint16_t lineBuf[640];
-    s_pngPtr->getLineAsRGB565(pDraw, lineBuf, PNG_RGB565_LITTLE_ENDIAN, 0xFFFFFFFF);
-
-    int       startX = s_pngOvl.srcStartX;
-    int       copyW  = s_pngOvl.w;
-    if (startX + copyW > (int)pDraw->iWidth)
-        copyW = (int)pDraw->iWidth - startX;
-    if (copyW <= 0)
-        return 1;
-
-    // byte-swap to big-endian expected by draw16bitBeRGBBitmap
-    for (int i = 0; i < copyW; i++)
-        lineBuf[startX + i] = __builtin_bswap16(lineBuf[startX + i]);
-
-    tft->draw16bitBeRGBBitmap(s_pngOvl.x, s_pngOvl.y + dstY, &lineBuf[startX], copyW, 1);
-
-    return 1;
-}
+    bool     active = false;
+    char     path[64] = "";
+    int16_t  x = 0;   // TFT absolute x of top-left
+    int16_t  y = 0;   // TFT absolute y of top-left
+    int16_t  w = 0;   // rendered pixel width
+    int16_t  h = 0;   // rendered pixel height
+} s_bmpOvl;
 
 void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, int16_t maxW, int16_t maxH)
 {
@@ -202,7 +153,7 @@ void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, 
     }
 
     // Skip reload if the same image is already cached
-    if (s_pngOvl.active && strncmp(s_pngOvl.path, path, sizeof(s_pngOvl.path) - 1) == 0)
+    if (s_bmpOvl.active && strncmp(s_bmpOvl.path, path, sizeof(s_bmpOvl.path) - 1) == 0)
         return;
 
     clearPngOverlay();
@@ -216,51 +167,98 @@ void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, 
     else
         snprintf(fsPath, sizeof(fsPath), "%s", path);
 
-    // Allocate PNG decoder on the heap (~40 KB) only while decoding
-    s_pngPtr = new PNG();
-    if (!s_pngPtr) {
-        LOG_WARN("TFTDisplay: setPngOverlay: cannot allocate PNG decoder");
+    File f = FSCom.open(fsPath, FILE_O_READ);
+    if (!f) {
+        LOG_WARN("TFTDisplay: setPngOverlay: cannot open %s", fsPath);
         return;
     }
 
-    int rc = s_pngPtr->open(fsPath, s_pngOpen, s_pngClose, s_pngRead, s_pngSeek, s_pngDraw);
-    if (rc != PNG_SUCCESS) {
-        LOG_WARN("TFTDisplay: setPngOverlay: cannot open %s (rc=%d)", fsPath, rc);
-        delete s_pngPtr;
-        s_pngPtr = nullptr;
+    // ── BMP file header (14 bytes) + DIB header (≥40 bytes) ─────────────────
+    uint8_t hdr[54];
+    if (f.read(hdr, sizeof(hdr)) != sizeof(hdr) || hdr[0] != 'B' || hdr[1] != 'M') {
+        LOG_WARN("TFTDisplay: setPngOverlay: not a valid BMP: %s", fsPath);
+        f.close();
         return;
     }
 
-    int16_t imgW = (int16_t)s_pngPtr->getWidth();
-    int16_t imgH = (int16_t)s_pngPtr->getHeight();
+    uint32_t dataOffset  = hdr[10] | ((uint32_t)hdr[11] << 8) | ((uint32_t)hdr[12] << 16) | ((uint32_t)hdr[13] << 24);
+    int32_t  imgW        = hdr[18] | ((uint32_t)hdr[19] << 8) | ((uint32_t)hdr[20] << 16) | ((uint32_t)hdr[21] << 24);
+    int32_t  imgH        = hdr[22] | ((uint32_t)hdr[23] << 8) | ((uint32_t)hdr[24] << 16) | ((uint32_t)hdr[25] << 24);
+    uint16_t bpp         = hdr[28] | ((uint16_t)hdr[29] << 8);
+    uint32_t compression = hdr[30] | ((uint32_t)hdr[31] << 8) | ((uint32_t)hdr[32] << 16) | ((uint32_t)hdr[33] << 24);
 
-    // Center-crop to fit maxW × maxH (no scaling)
-    int16_t dstW = (imgW < maxW) ? imgW : maxW;
-    int16_t dstH = (imgH < maxH) ? imgH : maxH;
+    bool topDown = (imgH < 0);
+    if (topDown) imgH = -imgH;
 
-    s_pngOvl.srcStartX = (imgW > maxW) ? (imgW - maxW) / 2 : 0;
-    s_pngOvl.srcStartY = (imgH > maxH) ? (imgH - maxH) / 2 : 0;
-    s_pngOvl.w         = dstW;
-    s_pngOvl.h         = dstH;
-    s_pngOvl.x         = centerX - dstW / 2;
-    s_pngOvl.y         = topY;
+    if (bpp != 24 || compression != 0) {
+        LOG_WARN("TFTDisplay: setPngOverlay: unsupported BMP (bpp=%d comp=%d), need 24-bit uncompressed", bpp, compression);
+        f.close();
+        return;
+    }
 
-    // Draw ONCE to TFT
-    LOG_INFO("TFTDisplay: Decoding PNG overlay once to TFT GRAM: %s", fsPath);
-    s_pngPtr->decode(nullptr, 0);
+    if (imgW > 640) {
+        LOG_WARN("TFTDisplay: setPngOverlay: BMP too wide (%d px)", (int)imgW);
+        f.close();
+        return;
+    }
 
-    s_pngPtr->close();
-    delete s_pngPtr;
-    s_pngPtr = nullptr;
+    // ── Center-crop to fit maxW × maxH (no scaling) ──────────────────────────
+    int16_t dstW  = (imgW < maxW) ? (int16_t)imgW : maxW;
+    int16_t dstH  = (imgH < maxH) ? (int16_t)imgH : maxH;
+    int16_t srcX0 = (imgW > maxW) ? (imgW - maxW) / 2 : 0;  // first source column
+    int16_t srcY0 = (imgH > maxH) ? (imgH - maxH) / 2 : 0;  // first source row (top-down coords)
+    int16_t dstX  = centerX - dstW / 2;
 
-    s_pngOvl.active = true;
-    LOG_INFO("TFTDisplay: PNG overlay pushed to hardware at (%d,%d) %dx%d", s_pngOvl.x, s_pngOvl.y, dstW, dstH);
+    // Row stride: each BMP row is padded to a 4-byte boundary
+    uint32_t stride = ((uint32_t)imgW * 3 + 3) & ~3u;
+
+    // Static line buffers — no heap allocation needed
+    static uint8_t  rowBuf[640 * 3];
+    static uint16_t lineBuf[640];
+
+    LOG_INFO("TFTDisplay: Drawing BMP overlay to TFT GRAM: %s (%dx%d, render %dx%d)", fsPath, (int)imgW, (int)imgH, (int)dstW, (int)dstH);
+
+    // ── Read one row at a time, convert BGR→RGB565, push to TFT ─────────────
+    for (int16_t row = 0; row < dstH; row++) {
+        int32_t srcRow = srcY0 + row;
+        // Standard BMP is stored bottom-up; topDown flag handles the rare top-down variant
+        uint32_t fileRow = topDown ? (uint32_t)srcRow : (uint32_t)(imgH - 1 - srcRow);
+        uint32_t seekPos = dataOffset + fileRow * stride;
+
+        if (!f.seek(seekPos)) break;
+        if (f.read(rowBuf, (size_t)imgW * 3) != (int)((size_t)imgW * 3)) break;
+
+        // Convert BGR (BMP pixel order) → big-endian RGB565 (draw16bitBeRGBBitmap)
+        for (int16_t col = 0; col < dstW; col++) {
+            uint8_t b = rowBuf[(srcX0 + col) * 3 + 0];
+            uint8_t g = rowBuf[(srcX0 + col) * 3 + 1];
+            uint8_t r = rowBuf[(srcX0 + col) * 3 + 2];
+            uint16_t rgb565 = ((uint16_t)(r & 0xF8) << 8) | ((uint16_t)(g & 0xFC) << 3) | (b >> 3);
+            lineBuf[col] = __builtin_bswap16(rgb565);
+        }
+
+        tft->draw16bitBeRGBBitmap(dstX, topY + row, lineBuf, dstW, 1);
+    }
+
+    f.close();
+
+    strncpy(s_bmpOvl.path, path, sizeof(s_bmpOvl.path) - 1);
+    s_bmpOvl.path[sizeof(s_bmpOvl.path) - 1] = '\0';
+    s_bmpOvl.x      = dstX;
+    s_bmpOvl.y      = topY;
+    s_bmpOvl.w      = dstW;
+    s_bmpOvl.h      = dstH;
+    s_bmpOvl.active = true;
+
+    LOG_INFO("TFTDisplay: BMP overlay pushed to hardware at (%d,%d) %dx%d", dstX, topY, dstW, dstH);
 }
 
 void TFTDisplay::clearPngOverlay()
 {
-    s_pngOvl.active = false;
-    s_pngOvl.w = s_pngOvl.h = 0;
+    s_bmpOvl.active  = false;
+    s_bmpOvl.w       = 0;
+    s_bmpOvl.h       = 0;
+    s_bmpOvl.path[0] = '\0';
 }
 #endif // TROPICON2026
 
@@ -1399,8 +1397,8 @@ void TFTDisplay::display(bool fromBlank)
             for (x = x_FirstPixelUpdate + 1; x < displayWidth; x++) {
 #if defined(TROPICON2026)
                 // Skip the overlay area to allow the hardware-stored image to persist
-                if (s_pngOvl.active && x >= s_pngOvl.x && x < s_pngOvl.x + s_pngOvl.w && y >= s_pngOvl.y &&
-                    y < s_pngOvl.y + s_pngOvl.h) {
+                if (s_bmpOvl.active && x >= s_bmpOvl.x && x < s_bmpOvl.x + s_bmpOvl.w && y >= s_bmpOvl.y &&
+                    y < s_bmpOvl.y + s_bmpOvl.h) {
                     continue;
                 }
 #endif
@@ -1417,10 +1415,10 @@ void TFTDisplay::display(bool fromBlank)
                 }
             }
 #if defined(TROPICON2026)
-            if (s_pngOvl.active && y >= s_pngOvl.y && y < s_pngOvl.y + s_pngOvl.h) {
-                // Split drawing to avoid overwriting the persistent PNG in GRAM
-                int ovlX1 = s_pngOvl.x;
-                int ovlX2 = s_pngOvl.x + s_pngOvl.w - 1;
+            if (s_bmpOvl.active && y >= s_bmpOvl.y && y < s_bmpOvl.y + s_bmpOvl.h) {
+                // Split drawing to avoid overwriting the persistent BMP in GRAM
+                int ovlX1 = s_bmpOvl.x;
+                int ovlX2 = s_bmpOvl.x + s_bmpOvl.w - 1;
 
                 // Part before the image
                 int p1_start = x_FirstPixelUpdate;
@@ -1454,9 +1452,8 @@ void TFTDisplay::display(bool fromBlank)
         memcpy(buffer_back, buffer, displayBufferSize);
 
 #if defined(TROPICON2026)
-    // Draw PNG overlay directly on the TFT.
-    // In the "Draw-Once-and-Skip" strategy, we don't redraw the image here.
-    // It stays in the TFT's GRAM because we bypass those coordinates in the loops above.
+    // BMP overlay uses "Draw-Once-and-Skip" strategy: image was pushed to TFT GRAM
+    // in setPngOverlay() and is preserved by skipping those coordinates above.
 #endif
 }
 
