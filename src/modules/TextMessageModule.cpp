@@ -3,6 +3,7 @@
 #include "MessageStore.h"
 #include "NodeDB.h"
 #include "PowerFSM.h"
+#include "SerialConsole.h"
 #include "buzz.h"
 #include "configuration.h"
 #include "graphics/Screen.h"
@@ -13,10 +14,17 @@ TextMessageModule *textMessageModule;
 
 ProcessMessage TextMessageModule::handleReceived(const meshtastic_MeshPacket &mp)
 {
-#if defined(DEBUG_PORT) && !defined(DEBUG_MUTE)
     auto &p = mp.decoded;
+#if defined(DEBUG_PORT) && !defined(DEBUG_MUTE)
     LOG_INFO("Received text msg from=0x%0x, id=0x%x, msg=%.*s", mp.from, mp.id, p.payload.size, p.payload.bytes);
 #endif
+    // Forward received message to serial
+    {
+        const meshtastic_NodeInfoLite *sender = nodeDB->getMeshNode(mp.from);
+        const char *senderName =
+            (sender && sender->has_user && sender->user.long_name[0]) ? sender->user.long_name : "Unknown";
+        consolePrintf("[MSG] %s (0x%x): %.*s\n", senderName, mp.from, p.payload.size, p.payload.bytes);
+    }
     // add packet ID to the rolling list of packets
     textPacketList[textPacketListIndex] = mp.id;
     textPacketListIndex = (textPacketListIndex + 1) % TEXT_PACKET_LIST_SIZE;
