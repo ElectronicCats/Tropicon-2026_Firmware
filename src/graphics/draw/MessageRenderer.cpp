@@ -351,8 +351,8 @@ void drawTextMessageFrame(OLEDDisplay *display, OLEDDisplayUiState *state, int16
 
     display->clear();
     display->setTextAlignment(TEXT_ALIGN_LEFT);
-    display->setFont(FONT_SMALL);
-    const int navHeight = FONT_HEIGHT_SMALL;
+    display->setFont(FONT_MEDIUM);
+    const int navHeight = FONT_HEIGHT_MEDIUM;
     const int scrollBottom = SCREEN_HEIGHT - navHeight;
     const int usableHeight = scrollBottom;
     constexpr int LEFT_MARGIN = 2;
