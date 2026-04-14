@@ -903,34 +903,41 @@ void UIRenderer::drawDeviceFocused(OLEDDisplay *display, OLEDDisplayUiState *sta
     int yOffset = (currentResolution == ScreenResolution::High) ? 0 : 5;
     const char *longName = (ourNode && ourNode->has_user && ourNode->user.long_name[0]) ? ourNode->user.long_name : "";
     const char *shortName = owner.short_name ? owner.short_name : "";
-    char combinedName[96];
-    if (longName[0] && shortName[0]) {
-        snprintf(combinedName, sizeof(combinedName), "%s (%s)", longName, shortName);
-    } else if (longName[0]) {
-        strncpy(combinedName, longName, sizeof(combinedName) - 1);
-        combinedName[sizeof(combinedName) - 1] = '\0';
+
+    // === LongName: use FONT_MEDIUM if it fits, otherwise fall back to FONT_SMALL ===
+    int longNameY = getTextPositions(display)[line++] + yOffset;
+    display->setFont(FONT_LARGE);
+    textWidth = UIRenderer::measureStringWithEmotes(display, longName);
+    bool drewLargerLongName = longName[0] && (textWidth <= SCREEN_WIDTH - 4);
+    if (drewLargerLongName) {
+        nameX = (SCREEN_WIDTH - textWidth) / 2;
+        UIRenderer::drawStringWithEmotes(display, nameX, longNameY, longName, FONT_HEIGHT_MEDIUM, 1, false);
     } else {
-        strncpy(combinedName, shortName, sizeof(combinedName) - 1);
-        combinedName[sizeof(combinedName) - 1] = '\0';
-    }
-    if (SCREEN_WIDTH - UIRenderer::measureStringWithEmotes(display, combinedName) > 10) {
+        // Name too long for FONT_MEDIUM: fall back to FONT_SMALL, possibly combined with shortName
+        display->setFont(FONT_SMALL);
+        char combinedName[96];
+        if (longName[0] && shortName[0]) {
+            snprintf(combinedName, sizeof(combinedName), "%s (%s)", longName, shortName);
+        } else if (longName[0]) {
+            strncpy(combinedName, longName, sizeof(combinedName) - 1);
+            combinedName[sizeof(combinedName) - 1] = '\0';
+        } else {
+            strncpy(combinedName, shortName, sizeof(combinedName) - 1);
+            combinedName[sizeof(combinedName) - 1] = '\0';
+        }
         textWidth = UIRenderer::measureStringWithEmotes(display, combinedName);
         nameX = (SCREEN_WIDTH - textWidth) / 2;
-        UIRenderer::drawStringWithEmotes(
-            display, nameX, ((rows == 4) ? getTextPositions(display)[line++] : getTextPositions(display)[line++]) + yOffset,
-            combinedName, FONT_HEIGHT_SMALL, 1, false);
-    } else {
-        // === LongName Centered ===
-        textWidth = UIRenderer::measureStringWithEmotes(display, longName);
-        nameX = (SCREEN_WIDTH - textWidth) / 2;
-        UIRenderer::drawStringWithEmotes(display, nameX, getTextPositions(display)[line++], longName, FONT_HEIGHT_SMALL, 1,
-                                         false);
+        UIRenderer::drawStringWithEmotes(display, nameX, longNameY, combinedName, FONT_HEIGHT_SMALL, 1, false);
+    }
 
-        // === ShortName Centered ===
+    // === ShortName Centered in FONT_SMALL, below longName (only when longName was drawn larger) ===
+    display->setFont(FONT_MEDIUM);
+    if (shortName[0] && drewLargerLongName) {
         textWidth = UIRenderer::measureStringWithEmotes(display, shortName);
         nameX = (SCREEN_WIDTH - textWidth) / 2;
-        UIRenderer::drawStringWithEmotes(display, nameX, getTextPositions(display)[line++], shortName, FONT_HEIGHT_SMALL, 1,
+        UIRenderer::drawStringWithEmotes(display, nameX, longNameY + FONT_HEIGHT_MEDIUM + 2, shortName, FONT_HEIGHT_SMALL, 1,
                                          false);
+        line++;
     }
 #endif
     graphics::drawCommonFooter(display, x, y);
