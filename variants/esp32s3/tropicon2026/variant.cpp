@@ -1,10 +1,15 @@
 #include "variant.h"
 #include <Arduino.h>
+#ifdef USE_AIS
+#include "AIS/AISModule.h"
+AISModule* aisModule = nullptr;
+#else
 #include "SI4463/Si4463Module.h"
+Si4463Module* si4463Module = nullptr;
+#endif
 
 // SI4463 is driven via software (bit-bang) SPI because FSPI is used by LoRa
 // and HSPI is used by the NV3007 display.  No SPIClass instance is needed.
-Si4463Module* si4463Module = nullptr;
 
 extern "C" void earlyInitVariant()
 {
@@ -15,7 +20,11 @@ extern "C" void earlyInitVariant()
 
 extern "C" void lateInitVariant()
 {
+#ifdef USE_AIS
+    aisModule = new AISModule(
+#else
     si4463Module = new Si4463Module(
+#endif
         SI4463_CS,   // Chip Select  — IO14
         SI4463_SDN,  // Shutdown     — IO04
         SI4463_IRQ,  // IRQ          — IO08

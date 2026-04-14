@@ -43,6 +43,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #if defined(TROPICON2026)
 #include "draw/TalksRenderer.h"
 #endif
+#if defined(TROPICON2026) && defined(USE_AIS)
+#include "draw/AISRenderer.h"
+#endif
 
 #if !MESHTASTIC_EXCLUDE_GPS
 #include "GPS.h"
@@ -1068,7 +1071,11 @@ void Screen::setFrames(FrameFocus focus)
 #if defined(TROPICON2026)
     fsi.positions.talks = numframes;
     normalFrames[numframes++] = graphics::TalksRenderer::drawFrame;
-    indicatorIcons.push_back(icon_list); // Or a specific icon if available
+    indicatorIcons.push_back(icon_list);
+#endif
+#if defined(TROPICON2026) && defined(USE_AIS)
+    normalFrames[numframes++] = graphics::AISRenderer::drawFrame;
+    indicatorIcons.push_back(icon_list);
 #endif
 
     // If we have a critical fault, show it first

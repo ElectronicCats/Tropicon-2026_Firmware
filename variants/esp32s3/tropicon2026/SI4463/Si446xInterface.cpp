@@ -1,3 +1,4 @@
+#ifndef USE_AIS
 #include "Si446xInterface.h"
 #include "Si446x.h"
 #include "mesh/MeshService.h"
@@ -183,3 +184,4 @@ extern "C"
         if (_instance) _instance->handleSent();
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#ifndef USE_AIS
 #include "Si4463Module.h"
 #include "Si446xInterface.h"
 #include "MeshService.h"
@@ -63,3 +64,4 @@ ProcessMessage Si4463Module::handleReceived(const meshtastic_MeshPacket &mp)
     }
     return ProcessMessage::CONTINUE;
 }
+#endif

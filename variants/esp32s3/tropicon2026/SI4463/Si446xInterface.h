@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef USE_AIS
+
 #include "RadioInterface.h"
 #include "Si446x.h"
 #include <SPI.h>
@@ -48,3 +50,4 @@ private:
 
     void applySettings();
 };
+#endif

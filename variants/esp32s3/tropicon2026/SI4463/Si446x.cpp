@@ -11,7 +11,11 @@
 #include "Si446x.h"
 #include "Si446x_config.h"
 #include "Si446x_defs.h"
+#ifdef USE_AIS
+#include "radio_config_ais.h"
+#else
 #include "radio_config.h"
+#endif
 
 // ESP32 specific concurrency
 #if defined(ESP32)
@@ -32,7 +36,9 @@ static portMUX_TYPE _si446x_mux = portMUX_INITIALIZER_UNLOCKED;
 static uint8_t _cs_pin;
 static uint8_t _sdn_pin;
 static int8_t _irq_pin;
+#ifndef TROPICON2026
 static SPIClass* _spi_bus;
+#endif
 
 #ifdef TROPICON2026
 // Software SPI pin state — HSPI is taken by the display and FSPI by LoRa,

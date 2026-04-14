@@ -1,3 +1,4 @@
+#ifndef USE_AIS
 #pragma once
 
 #include "mesh/MeshModule.h"
@@ -36,3 +37,4 @@ private:
 #endif
     Si446xInterface* _radioIf = nullptr;
 };
+#endif
