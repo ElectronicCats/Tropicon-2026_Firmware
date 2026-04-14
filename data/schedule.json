@@ -1,6 +1,18 @@
 [
   {
+    "Día": "Miercoles",
+    "DiaMes": "15/Abril/2026",
+    "Horario": "11:11 hrs",
+    "Track 1": "Sesion 1",
+    "Ponente": "Yo",
+    "ImagenTrack1": "",
+    "Track Villas": "",
+    "Ponente.1": "",
+    "ImagenVillas": ""
+  },
+  {
     "Día": "Viernes",
+    "DiaMes": "17/Abril/2026",
     "Horario": "09:00 hrs",
     "Track 1": "Registro",
     "Ponente": "",
@@ -11,6 +23,7 @@
   },
   {
     "Día": "Viernes",
+    "DiaMes": "17/Abril/2026",
     "Horario": "09:00 - 09:50 hrs",
     "Track 1": "Coffee Break",
     "Ponente": "",
@@ -21,6 +34,7 @@
   },
   {
     "Día": "Viernes",
+    "DiaMes": "17/Abril/2026",
     "Horario": "09:45 - 10:00 hrs",
     "Track 1": "Inauguración",
     "Ponente": "",
@@ -31,6 +45,7 @@
   },
   {
     "Día": "Viernes",
+    "DiaMes": "17/Abril/2026",
     "Horario": "10:00 - 10:50 hrs",
     "Track 1": "The Last Hacker Standing: Surviving the Age of IA",
     "Ponente": "NahamSec",
@@ -41,6 +56,7 @@
   },
   {
     "Día": "Viernes",
+    "DiaMes": "17/Abril/2026",
     "Horario": "11:00 - 11:50 hrs",
     "Track 1": "AppSec 3.0: Reinventando la seguridad en aplicaciones en la era de la IA",
     "Ponente": "Bryan Díaz",
@@ -51,6 +67,7 @@
   },
   {
     "Día": "Viernes",
+    "DiaMes": "17/Abril/2026",
     "Horario": "12:00 - 12:50 hrs",
     "Track 1": "Hacking a mano, fallos que la IA no puede replicar (aún)",
     "Ponente": "Omar Espino",
@@ -61,6 +78,7 @@
   },
   {
     "Día": "Viernes",
+    "DiaMes": "17/Abril/2026",
     "Horario": "13:00 - 13:50 hrs",
     "Track 1": "TBD",
     "Ponente": "Checkmarx",
@@ -71,6 +89,7 @@
   },
   {
     "Día": "Viernes",
+    "DiaMes": "17/Abril/2026",
     "Horario": "14:00 - 15:00 hrs",
     "Track 1": "Break",
     "Ponente": "",
@@ -81,6 +100,7 @@
   },
   {
     "Día": "Viernes",
+    "DiaMes": "17/Abril/2026",
     "Horario": "15:00 - 15:50 hrs",
     "Track 1": "Mesas Redonda: CISOs vs. Hackers",
     "Ponente": "",
@@ -91,6 +111,7 @@
   },
   {
     "Día": "Viernes",
+    "DiaMes": "17/Abril/2026",
     "Horario": "16:00 - 16:50 hrs",
     "Track 1": "Defendiendo Google sin usar muros",
     "Ponente": "Eduardo Vela",
@@ -101,6 +122,7 @@
   },
   {
     "Día": "Viernes",
+    "DiaMes": "17/Abril/2026",
     "Horario": "20:30 - 00:00 hrs",
     "Track 1": "Elite Party Hemingway",
     "Ponente": "",
@@ -111,6 +133,7 @@
   },
   {
     "Día": "Sábado",
+    "DiaMes": "18/Abril/2026",
     "Horario": "10:00 hrs",
     "Track 1": "Registro",
     "Ponente": "",
@@ -121,6 +144,7 @@
   },
   {
     "Día": "Sábado",
+    "DiaMes": "18/Abril/2026",
     "Horario": "10:30 - 10:50 hrs",
     "Track 1": "Coffee Break",
     "Ponente": "",
@@ -131,6 +155,7 @@
   },
   {
     "Día": "Sábado",
+    "DiaMes": "18/Abril/2026",
     "Horario": "11:00 - 11:50 hrs",
     "Track 1": "Cómo hackearán a tu familia 2: Estafas de siempre, engaños de hoy",
     "Ponente": "Héctor Pardiñas(Chiche)",
@@ -141,6 +166,7 @@
   },
   {
     "Día": "Sábado",
+    "DiaMes": "18/Abril/2026",
     "Horario": "12:00 - 12:50 hrs",
     "Track 1": "El fin de la confianza: Cómo la IA automatiza el engaño",
     "Ponente": "DragonJar",
@@ -151,6 +177,7 @@
   },
   {
     "Día": "Sábado",
+    "DiaMes": "18/Abril/2026",
     "Horario": "13:00 - 13:50 hrs",
     "Track 1": "¿Es posible vaciar una entidad financiera sin usar un solo 0-day?",
     "Ponente": "Ángel Gangas",
@@ -161,6 +188,7 @@
   },
   {
     "Día": "Sábado",
+    "DiaMes": "18/Abril/2026",
     "Horario": "14:00 - 15:00 hrs",
     "Track 1": "Break",
     "Ponente": "",
@@ -171,6 +199,7 @@
   },
   {
     "Día": "Sábado",
+    "DiaMes": "18/Abril/2026",
     "Horario": "15:00 - 15:50 hrs",
     "Track 1": "Rough Waters of Agent Security",
     "Ponente": "Anna Hupa",
@@ -181,6 +210,7 @@
   },
   {
     "Día": "Sábado",
+    "DiaMes": "18/Abril/2026",
     "Horario": "16:00 - 16:50 hrs",
     "Track 1": "Después del leak: Convirtiendo la negación en investigación",
     "Ponente": "Ignacio Gómez Villaseñor",
@@ -191,6 +221,7 @@
   },
   {
     "Día": "Sábado",
+    "DiaMes": "18/Abril/2026",
     "Horario": "17:00 - 17:50 hrs",
     "Track 1": "Reverse Engineering a Ledger Nano X Hardware Implant",
     "Ponente": "Joe Grand",
@@ -201,6 +232,7 @@
   },
   {
     "Día": "Sábado",
+    "DiaMes": "18/Abril/2026",
     "Horario": "18:00 - 18:15 hrs",
     "Track 1": "Clausura",
     "Ponente": "",

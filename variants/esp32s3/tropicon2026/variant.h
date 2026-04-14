@@ -125,6 +125,13 @@
 // Trackball interrupt edge: directional buttons trigger on FALLING (active-low)
 #define TB_DIRECTION FALLING
 
+// ── Event timezone note ───────────────────────────────────────────────────────
+// MESHTASTIC_EXCLUDE_TZ is defined globally, so getTZOffset() always returns 0.
+// As a result, getTime(true) == getTime(false) == UTC epoch.
+// The badge clock (ClockRenderer) therefore displays UTC time.
+// Schedule times in the JSON must match what the badge clock shows (UTC).
+// TalksModule::checkAndSendNotifications() compares UTC to UTC — no offset.
+
 /*
 Esquema de navegación TalksModule — 4 botones físicos
 ═══════════════════════════════════════════════════════════════════════════════

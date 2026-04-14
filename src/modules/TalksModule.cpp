@@ -5,7 +5,9 @@
 #include <algorithm>
 #include <set>
 #include "graphics/Screen.h"
+#include "mesh/MeshService.h"
 #include <ArduinoJson.h>
+#include "gps/RTC.h"
 
 extern graphics::Screen *screen;
 
@@ -52,7 +54,8 @@ void TalksModule::loadSchedule() {
 
     JsonArray arr = doc.as<JsonArray>();
     for (JsonObject entry : arr) {
-        const char* day     = entry["Día"]    | "";
+        const char* day     = entry["Día"]     | "";
+        const char* diaMes  = entry["DiaMes"]  | "";
         const char* horario = entry["Horario"] | "";
 
         // Track 1
@@ -63,6 +66,7 @@ void TalksModule::loadSchedule() {
         if (title1 && title1[0] != '\0') {
             Talk t;
             t.day     = day;
+            t.date    = diaMes;
             t.time    = horario;
             t.stage   = STAGE_TRACK1;
             t.title   = title1;
@@ -81,6 +85,7 @@ void TalksModule::loadSchedule() {
         if (title2 && title2[0] != '\0') {
             Talk t;
             t.day     = day;
+            t.date    = diaMes;
             t.time    = horario;
             t.stage   = STAGE_VILLAS;
             t.title   = title2;
@@ -126,6 +131,7 @@ void TalksModule::loadTalleres() {
     JsonArray arr = doc.as<JsonArray>();
     for (JsonObject entry : arr) {
         const char* day     = entry["Día"]     | "";
+        const char* diaMes  = entry["DiaMes"]  | "";
         const char* horario = entry["Horario"] | "";
 
         for (const auto& slot : slots) {
@@ -139,6 +145,7 @@ void TalksModule::loadTalleres() {
             if (title && title[0] != '\0') {
                 Talk t;
                 t.day     = day;
+                t.date    = diaMes;
                 t.time    = horario;
                 t.stage   = slot.stage;
                 t.title   = title;
@@ -202,7 +209,172 @@ int32_t TalksModule::runOnce() {
         isDirty = false;
         LOG_INFO("TalksModule: Saved interests to flash");
     }
+
+    // Check for upcoming talks every 30 seconds
+    if (millis() - lastNotifCheckMs >= 30000) {
+        lastNotifCheckMs = millis();
+        // Ensure data is loaded (lazy-load) even if the user hasn't opened the UI yet
+        ensureLoaded();
+        checkAndSendNotifications();
+    }
+
     return 1000;
+}
+
+// ── BLE Notifications ─────────────────────────────────────────────────────────
+
+// Returns the start time in minutes-since-midnight parsed from the Horario field.
+// Accepts both "HH:MM hrs" and "HH:MM - HH:MM hrs" (only start time is used).
+// Returns -1 on parse failure.
+static int parseTalkStartMinutes(const string& timeStr) {
+    int h = 0, m = 0;
+    if (sscanf(timeStr.c_str(), "%d:%d", &h, &m) == 2 && h >= 0 && h < 24 && m >= 0 && m < 60) {
+        return h * 60 + m;
+    }
+    return -1;
+}
+
+// Parses "DD/Mes/YYYY" (Spanish month name) into day-of-month, 0-based month,
+// and full year.  Returns true on success.
+static bool parseTalkDate(const string& dateStr, int &outDay, int &outMon, int &outYear) {
+    char monthName[16] = {};
+    int d = 0, y = 0;
+    if (sscanf(dateStr.c_str(), "%d/%15[^/]/%d", &d, monthName, &y) != 3) return false;
+
+    static const char* months[] = {
+        "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+        "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+    };
+    int m = -1;
+    for (int i = 0; i < 12; i++) {
+        if (strcmp(monthName, months[i]) == 0) { m = i; break; }
+    }
+    if (m < 0) return false;
+
+    outDay  = d;
+    outMon  = m;  // 0-based, matches tm_mon
+    outYear = y;
+    return true;
+}
+
+// Compares the current wall-clock time (from RTC/NTP) with each talk that the
+// user has flagged as "Asistir" (interest == 1).  When a talk is exactly
+// 10 minutes away (within a ±30-second window) a compact string is notified
+// over the BLE GATT log characteristic so the paired mobile app can surface a
+// system notification.
+//
+// The date comparison uses the "DiaMes" field ("DD/Mes/YYYY"), which is more
+// robust than day-of-week matching across multi-day events.
+//
+// Notifications are never sent via the LoRa/Mesh radio to avoid traffic
+// saturation – only the direct BLE link is used.
+//
+// Deduplication: once a notification has been sent for a given talk ID it is
+// added to notifiedTalkIds and will not be re-sent.  The set is cleared when
+// the calendar day changes so that the badge works correctly across multi-day
+// events.
+void TalksModule::checkAndSendNotifications() {
+    RTCQuality quality = getRTCQuality();
+    bool bleConnected = false;
+#if defined(ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
+    if (nimbleBluetooth && nimbleBluetooth->isConnected()) {
+        bleConnected = true;
+    }
+#endif
+
+    // Match ClockRenderer's time source: local system time (local=true).
+    uint32_t nowEpoch = getValidTime(RTCQualityDevice, true);
+
+    LOG_INFO("TalksModule: [Notif Check] RTC:%s BLE:%s Epoch:%lu", 
+             RtcName(quality), bleConnected ? "ON" : "OFF", (unsigned long)nowEpoch);
+
+    if (nowEpoch == 0) {
+        return;
+    }
+
+    // Since MESHTASTIC_EXCLUDE_TZ is set, getTZOffset() is 0 and getTime(true)
+    // returns the "local-as-UTC" epoch shown on the badge clock.
+    time_t localNow = (time_t)nowEpoch;
+    struct tm tmNow;
+    gmtime_r(&localNow, &tmNow);
+
+    LOG_INFO("TalksModule: Notif check — Clock %02d/%02d/%04d %02d:%02d (local_epoch=%lu)",
+             tmNow.tm_mday, tmNow.tm_mon + 1, tmNow.tm_year + 1900,
+             tmNow.tm_hour, tmNow.tm_min, (unsigned long)localNow);
+
+    // Clear the deduplication set once per UTC calendar day
+    if (tmNow.tm_yday != lastNotifDay) {
+        notifiedTalkIds.clear();
+        lastNotifDay = tmNow.tm_yday;
+        LOG_INFO("TalksModule: Notification dedup set cleared (UTC yday=%d)", lastNotifDay);
+    }
+
+    for (const auto& t : talks) {
+        // Only "Asistir" (interest == 1)
+        if (t.interest != 1) continue;
+
+        // Skip if already notified today
+        if (notifiedTalkIds.count(t.id)) continue;
+
+        // Parse calendar date from "DiaMes" ("DD/Mes/YYYY")
+        int talkDay = 0, talkMon = 0, talkYear = 0;
+        if (!parseTalkDate(t.date, talkDay, talkMon, talkYear)) {
+            LOG_INFO("TalksModule: Could not parse DiaMes '%s' for '%s'",
+                     t.date.c_str(), t.title.c_str());
+            continue;
+        }
+
+        // Match today's UTC date against the talk's date
+        if (talkDay  != tmNow.tm_mday        ||
+            talkMon  != tmNow.tm_mon          ||
+            talkYear != tmNow.tm_year + 1900) {
+            continue;
+        }
+
+        // Parse start time from "Horario" (UTC, as shown on the badge clock)
+        int startMinutes = parseTalkStartMinutes(t.time);
+        if (startMinutes < 0) {
+            LOG_INFO("TalksModule: Could not parse Horario '%s' for '%s'",
+                     t.time.c_str(), t.title.c_str());
+            continue;
+        }
+
+        // Build the local epoch for today's talk start time.
+        // Direct arithmetic ensures consistency with the ClockRenderer display.
+        uint32_t todayStart = nowEpoch - (nowEpoch % 86400);
+        uint32_t talkEpoch  = todayStart + (startMinutes * 60);
+
+        // Notification window: [9m30s, 10m30s] before the talk — 60 s wide,
+        // guaranteed to contain at least one 30-second polling tick
+        int64_t delta = (int64_t)talkEpoch - (int64_t)nowEpoch;
+        
+        // Log all talks marked as 'Asistir' to help diagnose why they aren't triggering
+        LOG_INFO("TalksModule:   - Talk '%s' @ %s (Epoch:%lu) -> Delta:%lld s",
+                 t.title.c_str(), t.time.c_str(), (unsigned long)talkEpoch, (long long)delta);
+
+        if (delta < 570 || delta > 630) continue;
+
+        // Build the official ClientNotification payload
+        meshtastic_ClientNotification *cn = clientNotificationPool.allocZeroed();
+        if (cn) {
+            cn->level = meshtastic_LogRecord_Level_INFO;
+            cn->time = nowEpoch;
+            snprintf(cn->message, sizeof(cn->message), "Tropicon: %s empieza en 10 min", t.title.c_str());
+            
+            if (bleConnected) {
+                service->sendClientNotification(cn);
+                LOG_INFO("TalksModule: !!! Notification sent to phone for '%s'", t.title.c_str());
+            } else {
+                // If not connected, we should probably release it or send anyway so it's in the queue
+                // The API will handle queueing.
+                service->sendClientNotification(cn);
+                LOG_INFO("TalksModule: App not connected, notification queued for '%s'", t.title.c_str());
+            }
+        }
+
+        // Mark notified regardless of delivery to avoid duplicates
+        notifiedTalkIds.insert(t.id);
+    }
 }
 
 // ── Queries ───────────────────────────────────────────────────────────────────

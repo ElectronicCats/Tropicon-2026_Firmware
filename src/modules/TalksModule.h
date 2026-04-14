@@ -6,6 +6,7 @@
 #include "concurrency/OSThread.h"
 #include <vector>
 #include <string>
+#include <set>
 
 using namespace std;
 
@@ -22,6 +23,7 @@ using namespace std;
 struct Talk {
     string id;
     string day;
+    string date;  // "DiaMes" field: "DD/Mes/YYYY" (e.g. "17/Abril/2026")
     string time;
     string stage;
     string title;
@@ -67,6 +69,16 @@ private:
     bool     isLoaded          = false;
     bool     isDirty           = false;
     uint32_t lastInteractionMs = 0;
+
+    // ── BLE notification state ────────────────────────────────────────────────
+    // Talk IDs for which a 10-minute alert has already been sent this day.
+    // Cleared automatically when the calendar day changes.
+    set<string>  notifiedTalkIds;
+    uint32_t     lastNotifCheckMs = 0;
+    int          lastNotifDay     = -1; // tm_yday of the last check, used to reset the set daily
+
+    // Sends BLE push alerts for talks marked "Asistir" that start in ~10 minutes.
+    void checkAndSendNotifications();
 
     // Observer for input
     CallbackObserver<TalksModule, const InputEvent *> inputObserver =
