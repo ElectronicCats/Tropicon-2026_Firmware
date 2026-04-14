@@ -33,6 +33,27 @@ static uint8_t _cs_pin;
 static uint8_t _sdn_pin;
 static int8_t _irq_pin;
 static SPIClass* _spi_bus;
+
+#ifdef TROPICON2026
+// Software SPI pin state — HSPI is taken by the display and FSPI by LoRa,
+// so SI4463 is driven via GPIO bit-bang (MODE0: CPOL=0, CPHA=0).
+static uint8_t _sw_sck_pin;
+static uint8_t _sw_miso_pin;
+static uint8_t _sw_mosi_pin;
+
+static IRAM_ATTR uint8_t softSpiTransfer(uint8_t data)
+{
+    uint8_t result = 0;
+    for (int8_t bit = 7; bit >= 0; bit--) {
+        digitalWrite(_sw_mosi_pin, (data >> bit) & 1);
+        digitalWrite(_sw_sck_pin, HIGH);
+        result = (result << 1) | digitalRead(_sw_miso_pin);
+        digitalWrite(_sw_sck_pin, LOW);
+    }
+    return result;
+}
+#endif // TROPICON2026
+
 static volatile uint8_t isrBusy = 0;
 static volatile uint8_t isrState_local = 0;
 static volatile uint8_t enabledInterrupts[3];
@@ -41,8 +62,13 @@ static volatile uint8_t enabledInterrupts[3];
 #define delay_us(us) delayMicroseconds(us)
 #define spiSelect()   digitalWrite(_cs_pin, LOW)
 #define spiDeselect() digitalWrite(_cs_pin, HIGH)
+#ifdef TROPICON2026
+#define spi_transfer_nr(data) softSpiTransfer(data)
+#define spi_transfer(data)    softSpiTransfer(data)
+#else
 #define spi_transfer_nr(data) _spi_bus->transfer(data)
 #define spi_transfer(data)    _spi_bus->transfer(data)
+#endif
 
 static volatile bool _irq_enabled = false;
 
@@ -89,7 +115,9 @@ void Si446x_irq_on(uint8_t origVal)
 
 static inline uint8_t cselect(void)
 {
+#ifndef TROPICON2026
     _spi_bus->beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));
+#endif
     spiSelect();
     return 1;
 }
@@ -97,7 +125,9 @@ static inline uint8_t cselect(void)
 static inline uint8_t cdeselect(void)
 {
     spiDeselect();
+#ifndef TROPICON2026
     _spi_bus->endTransaction();
+#endif
     return 0;
 }
 
@@ -298,7 +328,18 @@ void Si446x_init(uint8_t cs, uint8_t sdn, int8_t irq, void* spi)
     _cs_pin = cs;
     _sdn_pin = sdn;
     _irq_pin = irq;
+#ifdef TROPICON2026
+    // spi points to a uint8_t[3] = { sck, miso, mosi }
+    const uint8_t* pins = (const uint8_t*)spi;
+    _sw_sck_pin  = pins[0];
+    _sw_miso_pin = pins[1];
+    _sw_mosi_pin = pins[2];
+    pinMode(_sw_sck_pin,  OUTPUT); digitalWrite(_sw_sck_pin,  LOW);
+    pinMode(_sw_miso_pin, INPUT_PULLUP);
+    pinMode(_sw_mosi_pin, OUTPUT); digitalWrite(_sw_mosi_pin, LOW);
+#else
     _spi_bus = (SPIClass*)spi;
+#endif
 
     spiDeselect();
     pinMode(_cs_pin, OUTPUT);

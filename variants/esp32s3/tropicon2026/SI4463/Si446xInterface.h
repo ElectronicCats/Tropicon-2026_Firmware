@@ -6,15 +6,20 @@
 
 /**
  * @brief RadioInterface implementation for the Si446x radio module.
- * 
- * This class wraps the Si446x library to provide a Meshtastic-compatible interface.
- * While Si4463 is not a LoRa radio, we can still use this interface to send and receive
- * packets through the Meshtastic radio stack or as a secondary telemetry/data link.
+ *
+ * On TROPICON2026 both hardware SPI buses are occupied (FSPI → LoRa, HSPI → display),
+ * so the SI4463 is driven via software (bit-bang) SPI using its dedicated GPIO pins.
+ * The constructor accepts explicit SCK/MISO/MOSI pin numbers in that variant.
+ * On all other targets a hardware SPIClass reference is used as before.
  */
 class Si446xInterface : public RadioInterface
 {
 public:
+#ifdef TROPICON2026
+    Si446xInterface(uint8_t cs, uint8_t sdn, int8_t irq, uint8_t sck, uint8_t miso, uint8_t mosi);
+#else
     Si446xInterface(uint8_t cs, uint8_t sdn, int8_t irq, SPIClass& spi);
+#endif
     virtual ~Si446xInterface();
 
     // RadioInterface implementation
@@ -34,7 +39,11 @@ public:
 private:
     uint8_t _cs, _sdn;
     int8_t _irq;
+#ifdef TROPICON2026
+    uint8_t _sck, _miso, _mosi;  // soft SPI pins
+#else
     SPIClass& _spi;
+#endif
     uint8_t _channel = 0;
 
     void applySettings();

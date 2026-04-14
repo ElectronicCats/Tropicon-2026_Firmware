@@ -72,8 +72,8 @@
 
 // SPI pins for display
 #define TFT_DC                  9    // IO09 = D/CX (Data/Command select)
-#define TFT_RST                 21   // IO21 = RESX (Reset)
-#define TFT_CS                  10   // IO10 = CSX (Chip Select)
+#define TFT_RST                 10   // IO21 = RESX (Reset)
+#define TFT_CS                  21   // IO10 = CSX (Chip Select)
 
 // Brightness control
 #define TFT_BL                  2    // IO02 = LCD_BRIGHT (PWM output)

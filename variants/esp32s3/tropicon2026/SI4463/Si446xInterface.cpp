@@ -11,10 +11,17 @@
 // Static instance pointer for C-style callbacks
 static Si446xInterface* _instance = nullptr;
 
-Si446xInterface::Si446xInterface(uint8_t cs, uint8_t sdn, int8_t irq, SPIClass& spi)
-    : _cs(cs), _sdn(sdn), _irq(irq), _spi(spi){
+#ifdef TROPICON2026
+Si446xInterface::Si446xInterface(uint8_t cs, uint8_t sdn, int8_t irq, uint8_t sck, uint8_t miso, uint8_t mosi)
+    : _cs(cs), _sdn(sdn), _irq(irq), _sck(sck), _miso(miso), _mosi(mosi) {
     _instance = this;
 }
+#else
+Si446xInterface::Si446xInterface(uint8_t cs, uint8_t sdn, int8_t irq, SPIClass& spi)
+    : _cs(cs), _sdn(sdn), _irq(irq), _spi(spi) {
+    _instance = this;
+}
+#endif
 
 Si446xInterface::~Si446xInterface()
 {
@@ -24,7 +31,13 @@ Si446xInterface::~Si446xInterface()
 bool Si446xInterface::init()
 {
     LOG_INFO("Si446x: Initializing radio");
+#ifdef TROPICON2026
+    // Pass soft SPI pins as uint8_t[3] = { sck, miso, mosi }
+    const uint8_t softPins[3] = { _sck, _miso, _mosi };
+    Si446x_init(_cs, _sdn, _irq, (void*)softPins);
+#else
     Si446x_init(_cs, _sdn, _irq, &_spi);
+#endif
     
     si446x_info_t info;
     Si446x_getInfo(&info);

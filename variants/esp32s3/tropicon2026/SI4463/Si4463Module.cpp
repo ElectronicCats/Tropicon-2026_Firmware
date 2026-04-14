@@ -4,10 +4,17 @@
 #include "configuration.h"
 #include "main.h"
 
+#ifdef TROPICON2026
+Si4463Module::Si4463Module(uint8_t cs, uint8_t sdn, int8_t irq, uint8_t sck, uint8_t miso, uint8_t mosi)
+    : MeshModule("Si4463"), _cs(cs), _sdn(sdn), _irq(irq), _sck(sck), _miso(miso), _mosi(mosi) {
+    isPromiscuous = true;
+}
+#else
 Si4463Module::Si4463Module(uint8_t cs, uint8_t sdn, int8_t irq, SPIClass& spi)
     : MeshModule("Si4463"), _cs(cs), _sdn(sdn), _irq(irq), _spi(spi) {
-    isPromiscuous = true; // See all packets in the mesh
+    isPromiscuous = true;
 }
+#endif
 
 Si4463Module::~Si4463Module()
 {
@@ -24,7 +31,11 @@ void Si4463Module::setup()
     LOG_INFO("Si4463Module: Setting up radio interface");
     
     // Create the RadioInterface wrapper
+#ifdef TROPICON2026
+    _radioIf = new Si446xInterface(_cs, _sdn, _irq, _sck, _miso, _mosi);
+#else
     _radioIf = new Si446xInterface(_cs, _sdn, _irq, _spi);
+#endif
     
     // Initialize the physical radio
     if (_radioIf->init())
