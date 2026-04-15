@@ -3,6 +3,7 @@
 #include "AIS/AISModule.h"
 #include "graphics/Screen.h"
 #include "graphics/ScreenFonts.h"
+#include "graphics/TFTDisplay.h"
 #include <Arduino.h>
 
 namespace graphics
@@ -28,6 +29,10 @@ void AISRenderer::drawFrame(OLEDDisplay *display, OLEDDisplayUiState * /*state*/
     char header[48];
     snprintf(header, sizeof(header), "AIS  ch %c  %lu frm", (channel == 21) ? 'B' : 'A', (unsigned long)frames);
     display->drawString(x + W / 2, y + 1, header);
+
+    // ── Ship icon overlay (top-right) ───────────────────────────────────────
+    // Similar to TalksRenderer, we use the BMP overlay path.
+    TFTDisplay::setPngOverlay("data/img/ship-solid-full_35x35.bmp", x + W / 2, y + 140, W, 35, false);
 
     display->setColor(OLEDDISPLAY_COLOR::WHITE);
 

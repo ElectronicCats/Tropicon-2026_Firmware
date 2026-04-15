@@ -77,7 +77,7 @@ extern MessageStore messageStore;
 #if USE_TFTDISPLAY
 extern uint16_t TFT_MESH;
 #else
-uint16_t TFT_MESH = COLOR565(0x67, 0xEA, 0x94);
+uint16_t TFT_MESH = COLOR565(255, 255, 255);
 #endif
 
 #if HAS_WIFI && !defined(ARCH_PORTDUINO)
@@ -349,7 +349,7 @@ Screen::Screen(ScanI2C::DeviceAddress address, meshtastic_Config_DisplayConfig_O
     } else {
         // Default best readable yellow color
         LOG_INFO("Setting screen RGB color to default: (255,255,128)");
-        TFT_MESH = COLOR565(255, 255, 128);
+        TFT_MESH = COLOR565(255, 255, 255);
     }
 
 #if defined(USE_SH1106) || defined(USE_SH1107) || defined(USE_SH1107_128_64)

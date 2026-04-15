@@ -66,7 +66,7 @@ class TFTDisplay : public OLEDDisplay
      * @param maxW     Maximum rendered width in pixels
      * @param maxH     Maximum rendered height in pixels
      */
-    static void setPngOverlay(const char *path, int16_t centerX, int16_t topY, int16_t maxW, int16_t maxH);
+    static void setPngOverlay(const char *path, int16_t centerX, int16_t topY, int16_t maxW, int16_t maxH, bool drawBorder = true);
     static void clearPngOverlay();
 #endif
 

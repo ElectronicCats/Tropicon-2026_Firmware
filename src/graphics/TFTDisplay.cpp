@@ -19,7 +19,7 @@ extern SX1509 gpioExtender;
 #ifdef TFT_MESH_OVERRIDE
 uint16_t TFT_MESH = TFT_MESH_OVERRIDE;
 #else
-uint16_t TFT_MESH = COLOR565(0x67, 0xEA, 0x94);
+uint16_t TFT_MESH = COLOR565(255, 255, 255);
 #endif
 
 #if defined(ST7735S)
@@ -161,7 +161,7 @@ static struct {
     int16_t x = 0, y = 0, w = 0, h = 0;
 } s_bmpOvlClearPending;
 
-void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, int16_t maxW, int16_t maxH)
+void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, int16_t maxW, int16_t maxH, bool drawBorder)
 {
     if (!path || !path[0]) {
         clearPngOverlay();
@@ -209,8 +209,8 @@ void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, 
     bool topDown = (imgH < 0);
     if (topDown) imgH = -imgH;
 
-    if (bpp != 24 || compression != 0) {
-        LOG_WARN("TFTDisplay: setPngOverlay: unsupported BMP (bpp=%d comp=%d), need 24-bit uncompressed", bpp, compression);
+    if ((bpp != 24 && bpp != 32) || compression != 0) {
+        LOG_WARN("TFTDisplay: setPngOverlay: unsupported BMP (bpp=%d comp=%d), need 24-bit/32-bit uncompressed", bpp, compression);
         f.close();
         return;
     }
@@ -234,11 +234,12 @@ void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, 
     // Center vertically within the reserved maxH area
     int16_t renderTopY = (topY + (maxH - dstH) / 2) - 30;
 
+    uint16_t pixelSize = bpp / 8;
     // Row stride: each BMP row is padded to a 4-byte boundary
-    uint32_t stride = ((uint32_t)imgW * 3 + 3) & ~3u;
+    uint32_t stride = ((uint32_t)imgW * pixelSize + 3) & ~3u;
 
     // Static line buffers — no heap allocation needed
-    static uint8_t  rowBuf[640 * 3];
+    static uint8_t  rowBuf[640 * 4];
     static uint16_t lineBuf[640];
 
     LOG_INFO("TFTDisplay: Drawing BMP overlay to TFT GRAM: %s (%dx%d, render %dx%d at %d,%d)",
@@ -252,13 +253,13 @@ void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, 
         uint32_t seekPos = dataOffset + fileRow * stride;
 
         if (!f.seek(seekPos)) break;
-        if (f.read(rowBuf, (size_t)imgW * 3) != (int)((size_t)imgW * 3)) break;
+        if (f.read(rowBuf, (size_t)imgW * pixelSize) != (int)((size_t)imgW * pixelSize)) break;
 
         // Convert BGR (BMP pixel order) → big-endian RGB565 (draw16bitBeRGBBitmap)
         for (int16_t col = 0; col < dstW; col++) {
-            uint8_t b = rowBuf[(srcX0 + col) * 3 + 0];
-            uint8_t g = rowBuf[(srcX0 + col) * 3 + 1];
-            uint8_t r = rowBuf[(srcX0 + col) * 3 + 2];
+            uint8_t b = rowBuf[(srcX0 + col) * pixelSize + 0];
+            uint8_t g = rowBuf[(srcX0 + col) * pixelSize + 1];
+            uint8_t r = rowBuf[(srcX0 + col) * pixelSize + 2];
             uint16_t rgb565 = ((uint16_t)(r & 0xF8) << 8) | ((uint16_t)(g & 0xFC) << 3) | (b >> 3);
             lineBuf[col] = __builtin_bswap16(rgb565);
         }
@@ -266,8 +267,10 @@ void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, 
         tft->draw16bitBeRGBBitmap(dstX, renderTopY + row, lineBuf, dstW, 1);
     }
 
-    // Draw themed border (1px outside the image)
-    tft->drawRect(dstX - 1, renderTopY - 1, dstW + 2, dstH + 2, TFT_MESH);
+    // Draw themed border (1px outside the image) if requested
+    if (drawBorder) {
+        tft->drawRect(dstX - 1, renderTopY - 1, dstW + 2, dstH + 2, TFT_MESH);
+    }
 
     f.close();
 
