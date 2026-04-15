@@ -6,22 +6,44 @@
 AISDecoder AISModule::_decoder;
 uint8_t AISModule::_rxDataPin = 17;
 volatile uint32_t AISModule::_frameCount = 0;
-volatile uint8_t AISModule::_currentChannel = 0;
+volatile uint8_t AISModule::_currentChannel = 19; // MAIANA ch19 = AIS-A 161.975 MHz
 std::vector<AISVesselInfo> AISModule::_recentVessels;
 SemaphoreHandle_t AISModule::_vesselMutex = nullptr;
 
 static constexpr uint8_t AIS_MAX_VESSELS = 8;
+
+// ── Ring buffer for ISR → task bit transfer ─────────────────────────────────
+static constexpr uint16_t BIT_RING_SIZE = 2048;
+static volatile uint8_t _bitRing[BIT_RING_SIZE / 8];
+static volatile uint16_t _bitRingHead = 0;
+static volatile uint16_t _bitRingTail = 0;
+
 static volatile uint32_t _isrBitCount = 0;
 static volatile uint32_t _isrOneCount = 0;
+static volatile uint32_t _isrOverflows = 0;
 
-// ── RX_DATA_CLK ISR — called on each demodulated bit ────────────────────────
+// ── RX_DATA_CLK ISR — stores bits in ring buffer ───────────────────────────
 void IRAM_ATTR AISModule::handleRxBit()
 {
     bool bit = digitalRead(_rxDataPin);
     _isrBitCount++;
     if (bit)
         _isrOneCount++;
-    _decoder.processBit(bit);
+
+    // Store bit in ring buffer (packed, 8 bits per byte)
+    uint16_t head = _bitRingHead;
+    uint16_t nextHead = (head + 1) & (BIT_RING_SIZE - 1);
+    if (nextHead == _bitRingTail) {
+        _isrOverflows++;
+        return;
+    }
+    uint16_t byteIdx = head >> 3;
+    uint8_t bitIdx = head & 7;
+    if (bit)
+        _bitRing[byteIdx] |= (1 << bitIdx);
+    else
+        _bitRing[byteIdx] &= ~(1 << bitIdx);
+    _bitRingHead = nextHead;
 }
 
 // ── Constructor ─────────────────────────────────────────────────────────────
@@ -30,7 +52,105 @@ AISModule::AISModule(uint8_t cs, uint8_t sdn, int8_t irq, uint8_t sck, uint8_t m
     : MeshModule("AIS"), _cs(cs), _sdn(sdn), _irq(irq), _sck(sck), _miso(miso), _mosi(mosi), _rxClkPin(rxClkPin),
       _rxDataGpio(rxDataGpio)
 {
-    _rxDataPin = rxDataGpio; // Read demodulated data from GPIO0 pin, not SDO
+    _rxDataPin = rxDataGpio;
+}
+
+// ── checkAlive helper ──────────────────────────────────────────────────────
+static bool checkAlive(const char *label)
+{
+    si446x_info_t info;
+    Si446x_getInfo(&info);
+    bool ok = (info.part == 0x4463);
+    Serial.printf("  [%s] part=0x%04X %s\n", label, info.part, ok ? "OK" : "DEAD!");
+    return ok;
+}
+
+// ── MAIANA Pass 2 modem config (applied at runtime after Pass 1 in radio_config) ──
+static void applyAISModemConfig()
+{
+    // Global settings
+    uint8_t g1[] = {0x11, 0x00, 0x01, 0x01, 0x00}; // GLOBAL_CLK_CFG
+    Si446x_sendCmd(g1, sizeof(g1));
+    uint8_t g2[] = {0x11, 0x00, 0x01, 0x03, 0x20}; // GLOBAL_CONFIG
+    Si446x_sendCmd(g2, sizeof(g2));
+    uint8_t g3[] = {0x11, 0x01, 0x01, 0x00, 0x00}; // INT_CTL disabled
+    Si446x_sendCmd(g3, sizeof(g3));
+    uint8_t g4[] = {0x11, 0x02, 0x04, 0x00, 0x0A, 0x09, 0x00, 0x00}; // FRR: A=RSSI, B=STATE
+    Si446x_sendCmd(g4, sizeof(g4));
+
+    // Preamble
+    uint8_t p1[] = {0x11, 0x10, 0x09, 0x00, 0x08, 0x94, 0x00, 0x1F, 0x31, 0x00, 0x00, 0x00, 0x00};
+    Si446x_sendCmd(p1, sizeof(p1));
+
+    // Sync
+    uint8_t s1[] = {0x11, 0x11, 0x06, 0x00, 0x01, 0xCC, 0xCC, 0x00, 0x00, 0x00};
+    Si446x_sendCmd(s1, sizeof(s1));
+
+    // Packet handler
+    uint8_t pk1[] = {0x11, 0x12, 0x0C, 0x00, 0x00, 0x01, 0x08, 0xFF, 0xFF, 0x20, 0x02, 0x00, 0x00, 0x00, 0x00, 0x40};
+    Si446x_sendCmd(pk1, sizeof(pk1));
+    uint8_t pk2[] = {0x11, 0x12, 0x0C, 0x0C, 0x40, 0x00, 0x40, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    Si446x_sendCmd(pk2, sizeof(pk2));
+    uint8_t pk3[] = {0x11, 0x12, 0x0C, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    Si446x_sendCmd(pk3, sizeof(pk3));
+    uint8_t pk4[] = {0x11, 0x12, 0x0C, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    Si446x_sendCmd(pk4, sizeof(pk4));
+    uint8_t pk5[] = {0x11, 0x12, 0x05, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00};
+    Si446x_sendCmd(pk5, sizeof(pk5));
+    uint8_t pk6[] = {0x11, 0x12, 0x04, 0x36, 0x00, 0x00, 0x00, 0x00};
+    Si446x_sendCmd(pk6, sizeof(pk6));
+    checkAlive("PKT");
+
+    // Modem Pass 2
+    uint8_t m1[] = {0x11, 0x20, 0x0C, 0x00, 0x03, 0x00, 0x07, 0x05, 0xDC, 0x00, 0x05, 0xC9, 0xC3, 0x80, 0x00, 0x01};
+    Si446x_sendCmd(m1, sizeof(m1));
+    uint8_t m2[] = {0x11, 0x20, 0x01, 0x0C, 0xF7}; // FREQ_DEV
+    Si446x_sendCmd(m2, sizeof(m2));
+    uint8_t m3[] = {0x11, 0x20, 0x0C, 0x18, 0x01, 0x80, 0x08, 0x02, 0x80, 0x00, 0x70, 0x20, 0x00, 0xE8, 0x00, 0x62};
+    Si446x_sendCmd(m3, sizeof(m3));
+    uint8_t m4[] = {0x11, 0x20, 0x0C, 0x24, 0x05, 0x3E, 0x2D, 0x02, 0x9D, 0x00, 0xC2, 0x00, 0x54, 0x23, 0x81, 0x01};
+    Si446x_sendCmd(m4, sizeof(m4));
+    // AFC_LIMITER widened for 20pF crystal offset
+    uint8_t m5[] = {0x11, 0x20, 0x03, 0x30, 0x08, 0x00, 0x80};
+    Si446x_sendCmd(m5, sizeof(m5));
+    uint8_t m6[] = {0x11, 0x20, 0x01, 0x35, 0xE0}; // AGC_CONTROL
+    Si446x_sendCmd(m6, sizeof(m6));
+    uint8_t m7[] = {0x11, 0x20, 0x0C, 0x38, 0x11, 0x15, 0x15, 0x80, 0x1A, 0x20, 0x00, 0x00, 0x28, 0x0C, 0x84, 0x23};
+    Si446x_sendCmd(m7, sizeof(m7));
+    checkAlive("MODEM");
+
+    // RAW_CONTROL
+    uint8_t m8[] = {0x11, 0x20, 0x0A, 0x45, 0x8F, 0x00, 0x6A, 0x01, 0x00, 0xFF, 0x06, 0x00, 0x18, 0x40};
+    Si446x_sendCmd(m8, sizeof(m8));
+    uint8_t m9[] = {0x11, 0x20, 0x02, 0x50, 0x94, 0x0D}; // RAW_SEARCH2 + CLKGEN_BAND
+    Si446x_sendCmd(m9, sizeof(m9));
+    uint8_t m10[] = {0x11, 0x20, 0x02, 0x54, 0x03, 0x07}; // SPIKE_DET
+    Si446x_sendCmd(m10, sizeof(m10));
+    uint8_t m11[] = {0x11, 0x20, 0x01, 0x57, 0x00}; // RSSI_MUTE
+    Si446x_sendCmd(m11, sizeof(m11));
+    uint8_t m12[] = {0x11, 0x20, 0x05, 0x5B, 0x40, 0x04, 0x04, 0x78, 0x20}; // DSA
+    Si446x_sendCmd(m12, sizeof(m12));
+
+    // Channel filters Pass 2
+    uint8_t f1[] = {0x11, 0x21, 0x0C, 0x00, 0xCC, 0xA1, 0x30, 0xA0, 0x21, 0xD1, 0xB9, 0xC9, 0xEA, 0x05, 0x12, 0x11};
+    Si446x_sendCmd(f1, sizeof(f1));
+    uint8_t f2[] = {0x11, 0x21, 0x0C, 0x0C, 0x0A, 0x04, 0x15, 0xFC, 0x03, 0x00, 0xCC, 0xA1, 0x30, 0xA0, 0x21, 0xD1};
+    Si446x_sendCmd(f2, sizeof(f2));
+    uint8_t f3[] = {0x11, 0x21, 0x0C, 0x18, 0xB9, 0xC9, 0xEA, 0x05, 0x12, 0x11, 0x0A, 0x04, 0x15, 0xFC, 0x03, 0x00};
+    Si446x_sendCmd(f3, sizeof(f3));
+    checkAlive("CHFLT");
+
+    // PA + Synth + Match + Freq Control
+    uint8_t pa[] = {0x11, 0x22, 0x04, 0x00, 0x08, 0x7F, 0x00, 0x1D};
+    Si446x_sendCmd(pa, sizeof(pa));
+    uint8_t sy[] = {0x11, 0x23, 0x07, 0x00, 0x2C, 0x0E, 0x0B, 0x04, 0x0C, 0x73, 0x03};
+    Si446x_sendCmd(sy, sizeof(sy));
+    uint8_t mv[] = {0x11, 0x30, 0x0C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    Si446x_sendCmd(mv, sizeof(mv));
+    // FREQ_CONTROL: MAIANA base ~150.9 MHz, step 25 kHz. Ch19=AIS-A, Ch21=AIS-B
+    uint8_t fc[] = {0x11, 0x40, 0x08, 0x00, 0x3F, 0x0C, 0xCC, 0xCC, 0x14, 0x7B, 0x20, 0xFA};
+    Si446x_sendCmd(fc, sizeof(fc));
+    checkAlive("FREQ_CTRL");
 }
 
 // ── Background task ─────────────────────────────────────────────────────────
@@ -39,13 +159,22 @@ void aisTask(void *pvParameters)
     uint32_t lastDiag = millis();
 
     while (true) {
+        // Drain ring buffer → decoder
+        while (_bitRingTail != _bitRingHead) {
+            uint16_t tail = _bitRingTail;
+            uint16_t byteIdx = tail >> 3;
+            uint8_t bitIdx = tail & 7;
+            bool bit = (_bitRing[byteIdx] >> bitIdx) & 1;
+            _bitRingTail = (tail + 1) & (BIT_RING_SIZE - 1);
+            AISModule::_decoder.processBit(bit);
+        }
+
         // Diagnostic: print ISR stats every 5 seconds
         if (millis() - lastDiag >= 5000) {
             uint32_t bits = _isrBitCount;
             uint32_t ones = _isrOneCount;
             _isrBitCount = 0;
             _isrOneCount = 0;
-            // SPI still works — read radio state, RSSI, modem status, AFC
             uint8_t radioState = Si446x_getState();
             uint8_t modemStat = 0;
             uint8_t currRssiRaw = 0;
@@ -53,12 +182,12 @@ void aisTask(void *pvParameters)
             Si446x_getModemStatus(&modemStat, &currRssiRaw, &afcOffset);
             int16_t rssi = (currRssiRaw / 2) - 134;
             Serial.printf("[AIS] 5s: %lu bits, %lu%% ones | flags=%lu aborts=%lu crcFail=%lu crcOK=%lu maxLen=%u | st=%u rssi=%d "
-                          "modem=0x%02X afc=%d | lastCRC=0x%04X len=%u\n",
+                          "modem=0x%02X afc=%d | ovf=%lu\n",
                           (unsigned long)bits, bits ? (unsigned long)(ones * 100 / bits) : 0UL,
                           (unsigned long)AISModule::_decoder.dbgFlags, (unsigned long)AISModule::_decoder.dbgAborts,
                           (unsigned long)AISModule::_decoder.dbgCrcFail, (unsigned long)AISModule::_decoder.dbgCrcPass,
                           (unsigned)AISModule::_decoder.dbgMaxLen, radioState, rssi, modemStat, afcOffset,
-                          AISModule::_decoder.dbgLastCrc, AISModule::_decoder.dbgLastCrcLen);
+                          (unsigned long)_isrOverflows);
             lastDiag = millis();
         }
 
@@ -72,7 +201,7 @@ void aisTask(void *pvParameters)
             AISModule::_decoder.dbgAbortReady = false;
         }
 
-        // Print hex dump of long CRC-fail frames (possible AIS)
+        // Print hex dump of CRC-fail frames
         if (AISModule::_decoder.dbgFrameReady) {
             uint8_t len = AISModule::_decoder.dbgFrameLen;
             uint16_t crc = AISModule::_decoder.dbgLastCrc;
@@ -97,7 +226,13 @@ void aisTask(void *pvParameters)
                 uint32_t mmsi = AISModule::_extractMMSI(frameBuf, len);
 
                 LOG_INFO("AIS Frame  type=%u  MMSI=%09lu  ch=%c  bytes=%u", msgType, (unsigned long)mmsi,
-                         AISModule::_currentChannel ? 'B' : 'A', (unsigned)len);
+                         AISModule::_currentChannel == 19 ? 'A' : 'B', (unsigned)len);
+
+                // Print hex dump of successful frame
+                Serial.printf("[AIS] OK frame (%u bytes): ", len);
+                for (uint8_t i = 0; i < len; i++)
+                    Serial.printf("%02X ", frameBuf[i]);
+                Serial.println();
 
                 AISVesselInfo info{mmsi, msgType, AISModule::_currentChannel, (uint32_t)millis()};
 
@@ -122,7 +257,7 @@ void aisTask(void *pvParameters)
             }
         }
 
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(5)); // Faster polling for ring buffer
     }
 }
 
@@ -132,14 +267,14 @@ void AISModule::setup()
     MeshModule::setup();
     _vesselMutex = xSemaphoreCreateMutex();
 
-    // Init SI4463 with soft-SPI pins
+    // Init SI4463 with soft-SPI pins — loads Pass 1 config + firmware patch
     static uint8_t softSpiPins[3];
     softSpiPins[0] = _sck;
     softSpiPins[1] = _miso;
     softSpiPins[2] = _mosi;
     Si446x_init(_cs, _sdn, _irq, softSpiPins);
 
-    // Si446x_init ends with Si446x_sleep() — wake radio before querying
+    // Wake radio
     Si446x_RX(0);
 
     // Verify chip is present
@@ -155,55 +290,56 @@ void AISModule::setup()
 
     // ── GPIO0 connectivity test ──
     pinMode(_rxDataGpio, INPUT);
-    Si446x_writeGPIO(SI446X_GPIO0, 0x03); // DRIVE1 (force high)
+    Si446x_writeGPIO(SI446X_GPIO0, 0x03); // DRIVE1
     delay(2);
     bool g0_hi = digitalRead(_rxDataGpio);
-    Si446x_writeGPIO(SI446X_GPIO0, 0x02); // DRIVE0 (force low)
+    Si446x_writeGPIO(SI446X_GPIO0, 0x02); // DRIVE0
     delay(2);
     bool g0_lo = digitalRead(_rxDataGpio);
     Serial.printf("[AIS] GPIO0(pin%d): HIGH=%d LOW=%d\n", _rxDataGpio, g0_hi, g0_lo);
-    bool gpio0_ok = (g0_hi == 1 && g0_lo == 0);
 
-    if (gpio0_ok) {
-        Si446x_writeGPIO(SI446X_GPIO0, 0x14); // GPIO0 = RX_DATA
-        _rxDataPin = _rxDataGpio;
-        Serial.println("[AIS] GPIO0 connected — using GPIO0 for RX_DATA, SPI stays up");
-    } else {
-        Serial.println("[AIS] GPIO0 NOT connected — using SDO for RX_DATA (SPI disabled)");
-        Si446x_writeGPIO(SI446X_SDO, 0x14); // SDO = RX_DATA
-        _rxDataPin = _miso;
+    // Configure GPIOs for AIS RX (matching Sabas/MAIANA)
+    uint8_t gpioCmd[] = {0x13, 0x14, 0x00, 0x11, 0x14, 0x1B, 0x00, 0x60};
+    Si446x_sendCmd(gpioCmd, sizeof(gpioCmd));
+    _rxDataPin = _rxDataGpio;
+    Serial.println("[AIS] GPIO cfg: GPIO0=RX_DATA, GPIO2=RX_DATA_CLK");
+    checkAlive("GPIO_CFG");
+
+    // Apply MAIANA Pass 2 modem config
+    Serial.println("[AIS] Applying MAIANA Pass 2 modem config...");
+    applyAISModemConfig();
+    Serial.println("[AIS] Pass 2 config applied");
+
+    // Enter RX on channel 19 (AIS-A = 161.975 MHz)
+    {
+        uint8_t cmd[] = {0x32, 19, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        Si446x_sendCmd(cmd, sizeof(cmd));
     }
-
-    // Enter RX mode
-    Si446x_RX(0);
-    _currentChannel = 0;
+    _currentChannel = 19;
     delay(10);
 
-    // Attach bit-clock interrupt on FALLING edge of RX_DATA_CLK
+    // Attach bit-clock interrupt on RISING edge (matching dAISy/Sabas)
     pinMode(_rxClkPin, INPUT);
     pinMode(_rxDataGpio, INPUT);
-    attachInterrupt(digitalPinToInterrupt(_rxClkPin), &AISModule::handleRxBit, FALLING);
+    attachInterrupt(digitalPinToInterrupt(_rxClkPin), &AISModule::handleRxBit, RISING);
     delay(100);
     Serial.printf("[AIS] CLK test: %lu bits in 100ms\n", (unsigned long)_isrBitCount);
 
-    // Quick ones% check (no frequency override — using default XO_TUNE from radio config)
+    // Quick ones% check
     _isrBitCount = 0;
     _isrOneCount = 0;
     delay(2000);
     uint32_t chkBits = _isrBitCount;
     uint32_t chkOnes = _isrOneCount;
     int chkPct = chkBits ? (int)(chkOnes * 100 / chkBits) : 0;
-    Serial.printf("[AIS] Default config: XO=0x52, ones=%d%%\n", chkPct);
+    Serial.printf("[AIS] ones=%d%% (ch19, XO=0x7F)\n", chkPct);
 
-    LOG_INFO("AIS: RX_DATA on pin%d, CLK on pin%d, listening 161.975 MHz", (int)_rxDataPin, _rxClkPin);
+    LOG_INFO("AIS: RX on pin%d, CLK pin%d, ch19 (161.975 MHz)", (int)_rxDataPin, _rxClkPin);
 
     xTaskCreate(aisTask, "AisTask", 4096, this, 1, nullptr);
 }
 
 // ── switchToChannel() ───────────────────────────────────────────────────────
-// NOTE: Channel hopping is disabled because SPI doesn't work after SDO
-// is set to RX_DATA mode. To re-enable, SDO must be temporarily switched
-// back to SPI mode, or RX_DATA must be routed through a GPIO pin instead.
 void AISModule::switchToChannel(uint8_t channel)
 {
     _currentChannel = channel;

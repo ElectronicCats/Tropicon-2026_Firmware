@@ -425,6 +425,11 @@ void Si446x_setProperties(uint16_t prop, const uint8_t *values, uint8_t len)
     setProperties(prop, (void *)values, len);
 }
 
+void Si446x_sendCmd(void *data, uint8_t len)
+{
+    doAPI(data, len, NULL, 0);
+}
+
 void Si446x_setLowBatt(uint16_t voltage)
 {
     uint8_t batt = (voltage / 50) - 30;

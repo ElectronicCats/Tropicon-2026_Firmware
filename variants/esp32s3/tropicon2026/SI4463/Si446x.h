@@ -314,6 +314,11 @@ void Si446x_setProperty(uint16_t prop, uint8_t value);
 void Si446x_setProperties(uint16_t prop, const uint8_t *values, uint8_t len);
 
 /**
+ * @brief Send a raw command to the radio
+ */
+void Si446x_sendCmd(void *data, uint8_t len);
+
+/**
  * @brief Set the transmit power. The output power does not follow the \p pwr value, see the Si446x datasheet for a pretty graph
  *
  * 0 = -32dBm (<1uW)\n

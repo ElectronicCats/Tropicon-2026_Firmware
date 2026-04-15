@@ -11,8 +11,8 @@ class AISDecoder
   public:
     AISDecoder();
 
-    // Called from ISR — must be IRAM-safe, no heap allocation
-    void IRAM_ATTR processBit(bool bit);
+    // Called from task context (ISR stores bits in ring buffer)
+    void processBit(bool bit);
 
     // Called from task context
     bool hasMessage() const;
@@ -37,7 +37,7 @@ class AISDecoder
 
     void resetDecoder();
     bool checkCRC();
-    void IRAM_ATTR updateCRC(uint8_t byte);
+    void updateCRC(uint8_t byte);
 
   public:
     // Debug counters (volatile for ISR safety)

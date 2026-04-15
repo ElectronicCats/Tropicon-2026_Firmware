@@ -31,7 +31,7 @@ void AISDecoder::resetDecoder()
     dbgFrameReady = false;
 }
 
-void IRAM_ATTR AISDecoder::processBit(bool bit)
+void AISDecoder::processBit(bool bit)
 {
     // NRZI decode: same level = 1, transition = 0
     bool decodedBit = (bit == _lastBit);
@@ -128,7 +128,7 @@ void IRAM_ATTR AISDecoder::processBit(bool bit)
 
 // CRC-16-CCITT reflected (polynomial 0x8408, init 0xFFFF)
 // Bits are already LSB-first from the accumulator, matching reflected convention
-void IRAM_ATTR AISDecoder::updateCRC(uint8_t byte)
+void AISDecoder::updateCRC(uint8_t byte)
 {
     _crc ^= byte;
     for (int i = 0; i < 8; i++) {
