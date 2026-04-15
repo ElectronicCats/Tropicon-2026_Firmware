@@ -1407,11 +1407,15 @@ void TFTDisplay::display(bool fromBlank)
         if (r1 >= (int)((displayHeight + 7) / 8)) r1 = (displayHeight + 7) / 8 - 1;
         for (int r = r0; r <= r1; r++) {
             for (int c = c0; c <= c1; c++) {
-                // XOR with 0xFF unconditionally: this guarantees buffer_back
-                // differs from buffer regardless of what buffer contains
-                // (separator line bits, text, or plain black).  The diff loop
-                // will then write the correct pixel from buffer to TFT GRAM.
-                buffer_back[r * displayWidth + c] ^= 0xFF;
+                // Set buffer_back to the bitwise complement of the current
+                // buffer.  ~buffer is ALWAYS != buffer for every possible byte
+                // value (including 0x00 and 0xFF), so the diff loop is forced
+                // to visit and rewrite every TFT pixel in the cleared region
+                // with the correct OLED-buffer content.
+                // XOR with 0xFF fails when buffer == 0xFF (selected list items
+                // rendered with fillRect produce all-set bytes), because
+                // 0xFF ^ 0xFF == 0xFF == buffer → diff sees "no change".
+                buffer_back[r * displayWidth + c] = ~buffer[r * displayWidth + c];
             }
         }
         s_bmpOvlClearPending.pending = false;
