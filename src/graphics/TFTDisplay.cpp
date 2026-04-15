@@ -143,7 +143,23 @@ static struct {
     int16_t  y = 0;   // TFT absolute y of top-left
     int16_t  w = 0;   // rendered pixel width
     int16_t  h = 0;   // rendered pixel height
+    // Render-request params: used to detect position changes for the same image
+    // so that the same-path early return does not skip a reposition.
+    int16_t  reqTopY = -1;
+    int16_t  reqMaxH = -1;
 } s_bmpOvl;
+
+// When clearPngOverlay() erases an active overlay it stores the cleared
+// rectangle here.  display() picks it up on the very next call and
+// invalidates buffer_back for that region, which forces the diff loop to
+// re-assert the correct (black) pixel values to TFT GRAM.  This closes the
+// sync gap that otherwise exists because the OLED double-buffer never
+// contains the image pixels (they live only in TFT GRAM), so a plain
+// buffer == buffer_back comparison would silently skip those rows.
+static struct {
+    bool    pending = false;
+    int16_t x = 0, y = 0, w = 0, h = 0;
+} s_bmpOvlClearPending;
 
 void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, int16_t maxW, int16_t maxH)
 {
@@ -152,8 +168,11 @@ void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, 
         return;
     }
 
-    // Skip reload if the same image is already cached
-    if (s_bmpOvl.active && strncmp(s_bmpOvl.path, path, sizeof(s_bmpOvl.path) - 1) == 0)
+    // Skip reload if the same image is already cached AT THE SAME POSITION.
+    // reqTopY / reqMaxH capture the logical render origin so that a title-wrap
+    // change (yOff shift) correctly triggers a redraw even for the same file.
+    if (s_bmpOvl.active && strncmp(s_bmpOvl.path, path, sizeof(s_bmpOvl.path) - 1) == 0 &&
+        s_bmpOvl.reqTopY == topY && s_bmpOvl.reqMaxH == maxH)
         return;
 
     clearPngOverlay();
@@ -258,6 +277,8 @@ void TFTDisplay::setPngOverlay(const char *path, int16_t centerX, int16_t topY, 
     s_bmpOvl.y      = renderTopY - 1;
     s_bmpOvl.w      = dstW + 2;
     s_bmpOvl.h      = dstH + 2;
+    s_bmpOvl.reqTopY = topY;
+    s_bmpOvl.reqMaxH = maxH;
     s_bmpOvl.active = true;
 
     LOG_INFO("TFTDisplay: BMP overlay pushed to hardware at (%d,%d) %dx%d (with border)",
@@ -268,11 +289,18 @@ void TFTDisplay::clearPngOverlay()
 {
     if (s_bmpOvl.active && tft && s_bmpOvl.w > 0 && s_bmpOvl.h > 0) {
         tft->fillRect(s_bmpOvl.x, s_bmpOvl.y, s_bmpOvl.w, s_bmpOvl.h, TFT_BLACK);
+        // Schedule a buffer_back invalidation for the cleared region so the
+        // next display() call forces the diff loop to re-assert the correct
+        // pixel state (black) to TFT GRAM, closing the Draw-Once-and-Skip
+        // desync window.
+        s_bmpOvlClearPending = {true, s_bmpOvl.x, s_bmpOvl.y, s_bmpOvl.w, s_bmpOvl.h};
     }
     s_bmpOvl.active  = false;
     s_bmpOvl.w       = 0;
     s_bmpOvl.h       = 0;
     s_bmpOvl.path[0] = '\0';
+    s_bmpOvl.reqTopY = -1;
+    s_bmpOvl.reqMaxH = -1;
 }
 #endif // TROPICON2026
 
@@ -1346,12 +1374,49 @@ void TFTDisplay::display(bool fromBlank)
 #if defined(TROPICON2026)
         // fillScreen() erases TFT GRAM entirely, so the cached BMP overlay is
         // gone. Invalidate the cache so the next setPngOverlay() call redraws it.
-        s_bmpOvl.active  = false;
-        s_bmpOvl.path[0] = '\0';
+        s_bmpOvl.active          = false;
+        s_bmpOvl.path[0]         = '\0';
+        // fillScreen already cleared everything; no pending redraw needed.
+        s_bmpOvlClearPending.pending = false;
 #endif
     }
 
     concurrency::LockGuard g(spiLock);
+
+#if defined(TROPICON2026)
+    // ── Post-clear buffer resync ─────────────────────────────────────────────
+    // When clearPngOverlay() erased an active overlay it stored the cleared
+    // rectangle in s_bmpOvlClearPending.  Because display() was always
+    // SKIPPING that x-column range while the overlay was active, buffer_back
+    // was kept in sync with buffer via memcpy — so buffer == buffer_back for
+    // every byte in the cleared region (including separator-line bits, text
+    // that overlaps the image column range, etc.).  The diff loop would
+    // therefore silently fast-forward over those rows and never restore them.
+    // XOR-ing buffer_back with 0xFF unconditionally guarantees every byte in
+    // the region differs from buffer, forcing the diff loop to visit those
+    // rows and write the correct OLED-buffer pixels (separator lines, black
+    // background, anything) back to TFT GRAM.
+    if (s_bmpOvlClearPending.pending) {
+        int r0 = s_bmpOvlClearPending.y / 8;
+        int r1 = (s_bmpOvlClearPending.y + s_bmpOvlClearPending.h - 1) / 8;
+        int c0 = s_bmpOvlClearPending.x;
+        int c1 = s_bmpOvlClearPending.x + s_bmpOvlClearPending.w - 1;
+        if (c0 < 0) c0 = 0;
+        if (r0 < 0) r0 = 0;
+        if (c1 >= (int)displayWidth)  c1 = displayWidth - 1;
+        if (r1 >= (int)((displayHeight + 7) / 8)) r1 = (displayHeight + 7) / 8 - 1;
+        for (int r = r0; r <= r1; r++) {
+            for (int c = c0; c <= c1; c++) {
+                // XOR with 0xFF unconditionally: this guarantees buffer_back
+                // differs from buffer regardless of what buffer contains
+                // (separator line bits, text, or plain black).  The diff loop
+                // will then write the correct pixel from buffer to TFT GRAM.
+                buffer_back[r * displayWidth + c] ^= 0xFF;
+            }
+        }
+        s_bmpOvlClearPending.pending = false;
+    }
+#endif
 
     uint32_t x, y;
     uint32_t y_byteIndex;
