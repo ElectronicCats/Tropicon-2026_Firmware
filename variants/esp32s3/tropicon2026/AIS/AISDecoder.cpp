@@ -1,51 +1,75 @@
 #include "AISDecoder.h"
-#include <Arduino.h>
 
-AISDecoder::AISDecoder() {
+AISDecoder::AISDecoder()
+{
     resetDecoder();
 }
 
-void AISDecoder::resetDecoder() {
+void AISDecoder::resetDecoder()
+{
     _lastBit = true;
     _consecutiveOnes = 0;
     _inPacket = false;
     _bitCount = 0;
     _currentByte = 0;
     _bitInByte = 0;
-    _messageBuffer.clear();
+    _msgLen = 0;
     _messageReady = false;
     _crc = 0xFFFF;
-    _shiftReg = 0xFF;  // Reset HDLC flag shift register
+    _shiftReg = 0xFF;
+    dbgFlags = 0;
+    dbgFrameStart = 0;
+    dbgAborts = 0;
+    dbgCrcFail = 0;
+    dbgCrcPass = 0;
+    dbgMaxLen = 0;
+    dbgAbortLen = 0;
+    dbgAbortReady = false;
+    dbgLastCrc = 0;
+    dbgLastCrcLen = 0;
+    dbgFrameLen = 0;
+    dbgFrameReady = false;
 }
 
-void AISDecoder::processBit(bool bit) {
-    // NRZI Decoding: 0 = change, 1 = no change
+void IRAM_ATTR AISDecoder::processBit(bool bit)
+{
+    // NRZI decode: same level = 1, transition = 0
     bool decodedBit = (bit == _lastBit);
     _lastBit = bit;
 
-    // Shift the decoded bit into the 8-bit flag detector register.
-    // Using the member variable _shiftReg (not a static local) so that
-    // resetDecoder() can properly clear it between packets.
+    // Shift into 8-bit flag detector
     _shiftReg = (_shiftReg << 1) | (decodedBit ? 1 : 0);
 
+    // Check for HDLC flag 0x7E = 01111110
     if (_shiftReg == 0x7E) {
+        dbgFlags++;
         if (!_inPacket) {
-            // Potential Start of Frame
+            // Start of frame
             _inPacket = true;
-            _messageBuffer.clear();
+            _msgLen = 0;
             _bitCount = 0;
             _currentByte = 0;
             _bitInByte = 0;
             _consecutiveOnes = 0;
             _crc = 0xFFFF;
+            dbgFrameStart++;
         } else {
-            // Potential End of Frame
-            if (_messageBuffer.size() > 2) {
-                if (checkCRC()) {
-                    // Valid AIS message! Remove CRC bytes before signaling ready
-                    _messageBuffer.pop_back();
-                    _messageBuffer.pop_back();
-                    _messageReady = true;
+            // End of frame
+            if (_msgLen > 2 && checkCRC()) {
+                _msgLen -= 2; // strip CRC bytes
+                _messageReady = true;
+                dbgCrcPass++;
+            } else if (_msgLen > 0) {
+                dbgCrcFail++;
+                dbgLastCrc = _crc;
+                dbgLastCrcLen = _msgLen;
+                // Capture frames for inspection (any length)
+                if (_msgLen >= 5 && !dbgFrameReady) {
+                    uint8_t copyLen = _msgLen > 48 ? 48 : _msgLen;
+                    for (uint8_t i = 0; i < copyLen; i++)
+                        dbgFrameBuf[i] = _msgBuf[i];
+                    dbgFrameLen = copyLen;
+                    dbgFrameReady = true;
                 }
             }
             _inPacket = false;
@@ -53,66 +77,91 @@ void AISDecoder::processBit(bool bit) {
         return;
     }
 
-    if (!_inPacket) return;
+    if (!_inPacket)
+        return;
 
-    // Bit Unstuffing: after five consecutive '1's, the sender inserts a '0'.
-    // Six or more '1's without a stuffed '0' is a protocol violation — abort frame.
+    // Bit-unstuffing
     if (decodedBit) {
         _consecutiveOnes++;
-        if (_consecutiveOnes >= 6) {
-            // Abort sequence (≥6 ones inside a packet). Reset decoder.
+        if (_consecutiveOnes >= 7) {
+            // Abort — 7+ consecutive ones = HDLC abort (6 ones is part of flag 0x7E)
+            dbgAborts++;
+            if (_msgLen > dbgMaxLen)
+                dbgMaxLen = _msgLen;
+            // Capture first 32 bytes for debug
+            if (_msgLen >= 10 && !dbgAbortReady) {
+                uint8_t copyLen = _msgLen > 32 ? 32 : _msgLen;
+                for (uint8_t i = 0; i < copyLen; i++)
+                    dbgAbortBuf[i] = _msgBuf[i];
+                dbgAbortLen = copyLen;
+                dbgAbortReady = true;
+            }
             _inPacket = false;
             return;
         }
     } else {
         if (_consecutiveOnes == 5) {
-            // Stuffed bit detected, ignore this '0'
+            // Stuffed bit — discard
             _consecutiveOnes = 0;
             return;
         }
         _consecutiveOnes = 0;
     }
 
-    // Accumulate bits into bytes (LSB first for AIS/HDLC)
-    if (decodedBit) _currentByte |= (1 << _bitInByte);
-    
+    // Accumulate bits LSB-first
+    if (decodedBit)
+        _currentByte |= (1 << _bitInByte);
+
     _bitInByte++;
     if (_bitInByte == 8) {
-        _messageBuffer.push_back(_currentByte);
-        updateCRC(_currentByte);
+        if (_msgLen < AIS_MAX_MSG_LEN) {
+            _msgBuf[_msgLen++] = _currentByte;
+            updateCRC(_currentByte);
+        } else {
+            // Frame too long — abort
+            _inPacket = false;
+        }
         _currentByte = 0;
         _bitInByte = 0;
     }
 }
 
-bool AISDecoder::hasMessage() {
-    return _messageReady;
-}
-
-std::vector<uint8_t> AISDecoder::getMessage() {
-    return _messageBuffer;
-}
-
-void AISDecoder::clearMessage() {
-    _messageReady = false;
-    _messageBuffer.clear();
-}
-
-void AISDecoder::updateCRC(uint8_t byte) {
+// CRC-16-CCITT reflected (polynomial 0x8408, init 0xFFFF)
+// Bits are already LSB-first from the accumulator, matching reflected convention
+void IRAM_ATTR AISDecoder::updateCRC(uint8_t byte)
+{
+    _crc ^= byte;
     for (int i = 0; i < 8; i++) {
-        bool bit = (byte >> i) & 1;
-        bool c15 = (_crc >> 15) & 1;
-        _crc <<= 1;
-        if (c15 ^ bit) _crc ^= 0x1021;
+        if (_crc & 1)
+            _crc = (_crc >> 1) ^ 0x8408;
+        else
+            _crc >>= 1;
     }
 }
 
-bool AISDecoder::checkCRC() {
-    // Standard HDLC CRC-16 (X.25)
-    // The result of the division after receiving all bits (including FCS)
-    // should be 0x1D0F for CCITT if using this implementation
-    // Or we can just check if the calculated CRC matches the last two bytes.
-    // For simplicity, let's assume updateCRC was called on all bytes except final FCS.
-    // Actually, it's better to just check if the state is final.
-    return (_crc == 0xF0B8); // Standard final value for CCITT CRC-16 if inverted
+bool AISDecoder::checkCRC()
+{
+    // Try both common HDLC CRC-CCITT residues
+    return (_crc == 0xF0B8 || _crc == 0x0F47);
+}
+
+bool AISDecoder::hasMessage() const
+{
+    return _messageReady;
+}
+
+uint8_t AISDecoder::getMessageLen() const
+{
+    return _msgLen;
+}
+
+const uint8_t *AISDecoder::getMessagePtr() const
+{
+    return _msgBuf;
+}
+
+void AISDecoder::clearMessage()
+{
+    _messageReady = false;
+    _msgLen = 0;
 }
