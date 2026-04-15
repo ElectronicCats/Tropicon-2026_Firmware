@@ -13,7 +13,7 @@ SemaphoreHandle_t AISModule::_vesselMutex = nullptr;
 static constexpr uint8_t AIS_MAX_VESSELS = 8;
 
 // ── Ring buffer for ISR → task bit transfer ─────────────────────────────────
-static constexpr uint16_t BIT_RING_SIZE = 2048;
+static constexpr uint16_t BIT_RING_SIZE = 16384;
 static volatile uint8_t _bitRing[BIT_RING_SIZE / 8];
 static volatile uint16_t _bitRingHead = 0;
 static volatile uint16_t _bitRingTail = 0;
@@ -191,26 +191,11 @@ void aisTask(void *pvParameters)
             lastDiag = millis();
         }
 
-        // Print hex dump of aborted frames (for debugging)
-        if (AISModule::_decoder.dbgAbortReady) {
-            uint8_t len = AISModule::_decoder.dbgAbortLen;
-            Serial.printf("[AIS] Abort hex (%u bytes): ", len);
-            for (uint8_t i = 0; i < len; i++)
-                Serial.printf("%02X ", AISModule::_decoder.dbgAbortBuf[i]);
-            Serial.println();
+        // Silently consume debug frames to avoid serial flood blocking ring buffer drain
+        if (AISModule::_decoder.dbgAbortReady)
             AISModule::_decoder.dbgAbortReady = false;
-        }
-
-        // Print hex dump of CRC-fail frames
-        if (AISModule::_decoder.dbgFrameReady) {
-            uint8_t len = AISModule::_decoder.dbgFrameLen;
-            uint16_t crc = AISModule::_decoder.dbgLastCrc;
-            Serial.printf("[AIS] CRC-fail frame (%u bytes, crc=0x%04X): ", len, crc);
-            for (uint8_t i = 0; i < len; i++)
-                Serial.printf("%02X ", AISModule::_decoder.dbgFrameBuf[i]);
-            Serial.println();
+        if (AISModule::_decoder.dbgFrameReady)
             AISModule::_decoder.dbgFrameReady = false;
-        }
 
         // Check for decoded frames
         if (AISModule::_decoder.hasMessage()) {
@@ -257,7 +242,7 @@ void aisTask(void *pvParameters)
             }
         }
 
-        vTaskDelay(pdMS_TO_TICKS(5)); // Faster polling for ring buffer
+        vTaskDelay(pdMS_TO_TICKS(1)); // Must drain ring buffer faster than 9600 bps fill rate
     }
 }
 
@@ -325,6 +310,21 @@ void AISModule::setup()
     delay(100);
     Serial.printf("[AIS] CLK test: %lu bits in 100ms\n", (unsigned long)_isrBitCount);
 
+    // Frequency fine-tune: crystal offset compensation via FC_FRAC
+    // MAIANA nominal FRAC = 0x0CCCCC. Adjust to center ones% near 50%.
+    // Each LSB ≈ 4.77 Hz at RF. Negative offset pulls LO down.
+    const uint32_t nominalFrac = 0x0CCCCC;
+    const int32_t fracOffset = -1500; // ~-7.2 kHz compensation for crystal
+    uint32_t frac = nominalFrac + fracOffset;
+    uint8_t fracCmd[] = {0x11, 0x40, 0x03, 0x01, (uint8_t)(frac >> 16), (uint8_t)(frac >> 8), (uint8_t)frac};
+    Si446x_sendCmd(fracCmd, sizeof(fracCmd));
+    // Re-enter RX on ch19 after frequency change
+    {
+        uint8_t cmd[] = {0x32, 19, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        Si446x_sendCmd(cmd, sizeof(cmd));
+    }
+    delay(50);
+
     // Quick ones% check
     _isrBitCount = 0;
     _isrOneCount = 0;
@@ -332,7 +332,7 @@ void AISModule::setup()
     uint32_t chkBits = _isrBitCount;
     uint32_t chkOnes = _isrOneCount;
     int chkPct = chkBits ? (int)(chkOnes * 100 / chkBits) : 0;
-    Serial.printf("[AIS] ones=%d%% (ch19, XO=0x7F)\n", chkPct);
+    Serial.printf("[AIS] ones=%d%% (ch19, XO=0x7F, FC offset=%+d)\n", chkPct, (int)fracOffset);
 
     LOG_INFO("AIS: RX on pin%d, CLK pin%d, ch19 (161.975 MHz)", (int)_rxDataPin, _rxClkPin);
 
