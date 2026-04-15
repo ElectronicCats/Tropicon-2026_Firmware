@@ -12,8 +12,10 @@
 struct AISVesselInfo {
     uint32_t mmsi;
     uint8_t msgType;
-    uint8_t channel; // 0=A, 1=B
+    uint8_t channel; // 19=AIS-A, 21=AIS-B
     uint32_t seenAt_ms;
+    int16_t rssi;  // dBm
+    char nmea[80]; // NMEA !AIVDM sentence
 };
 
 class AISModule : public MeshModule

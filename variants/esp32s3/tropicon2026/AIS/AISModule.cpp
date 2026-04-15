@@ -231,7 +231,14 @@ void aisTask(void *pvParameters)
                 uint8_t msgType = AISModule::_extractMsgType(frameBuf, len);
                 uint32_t mmsi = AISModule::_extractMMSI(frameBuf, len);
 
-                AISVesselInfo info{mmsi, msgType, AISModule::_currentChannel, (uint32_t)millis()};
+                AISVesselInfo info{};
+                info.mmsi = mmsi;
+                info.msgType = msgType;
+                info.channel = AISModule::_currentChannel;
+                info.seenAt_ms = (uint32_t)millis();
+                info.rssi = rssiDbm;
+                strncpy(info.nmea, nmea, sizeof(info.nmea) - 1);
+                info.nmea[sizeof(info.nmea) - 1] = '\0';
 
                 if (xSemaphoreTake(AISModule::_vesselMutex, portMAX_DELAY) == pdTRUE) {
                     bool updated = false;

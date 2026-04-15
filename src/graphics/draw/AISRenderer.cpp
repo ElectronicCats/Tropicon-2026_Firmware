@@ -5,19 +5,13 @@
 #include "graphics/ScreenFonts.h"
 #include <Arduino.h>
 
-namespace graphics {
+namespace graphics
+{
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Layout constants (display is 428 × 142 px in landscape, rotation 1)
-// ─────────────────────────────────────────────────────────────────────────────
-static constexpr int16_t HEADER_H  = 16;
-static constexpr int16_t ROW_H     = 26;
-static constexpr int16_t COL_MMSI  = 4;
-static constexpr int16_t COL_CH    = 100;
-static constexpr int16_t COL_AGE   = 130;
+static constexpr int16_t HEADER_H = 16;
+static constexpr int16_t ROW_H = 28;
 
-void AISRenderer::drawFrame(OLEDDisplay *display, OLEDDisplayUiState * /*state*/,
-                             int16_t x, int16_t y)
+void AISRenderer::drawFrame(OLEDDisplay *display, OLEDDisplayUiState * /*state*/, int16_t x, int16_t y)
 {
     const int16_t W = display->getWidth();
     const int16_t H = display->getHeight();
@@ -29,11 +23,10 @@ void AISRenderer::drawFrame(OLEDDisplay *display, OLEDDisplayUiState * /*state*/
     display->setTextAlignment(TEXT_ALIGN_CENTER);
     display->setFont(FONT_SMALL);
 
-    uint32_t frames  = AISModule::getFrameCount();
-    uint8_t  channel = AISModule::getCurrentChannel();
+    uint32_t frames = AISModule::getFrameCount();
+    uint8_t channel = AISModule::getCurrentChannel();
     char header[48];
-    snprintf(header, sizeof(header), "AIS  ch %c  %lu frm",
-             channel ? 'B' : 'A', (unsigned long)frames);
+    snprintf(header, sizeof(header), "AIS  ch %c  %lu frm", (channel == 21) ? 'B' : 'A', (unsigned long)frames);
     display->drawString(x + W / 2, y + 1, header);
 
     display->setColor(OLEDDISPLAY_COLOR::WHITE);
@@ -50,23 +43,12 @@ void AISRenderer::drawFrame(OLEDDisplay *display, OLEDDisplayUiState * /*state*/
 
     int16_t curY = y + HEADER_H + 2;
 
-    // Column headers
-    display->setFont(FONT_SMALL);
-    display->setTextAlignment(TEXT_ALIGN_LEFT);
-    display->drawString(x + COL_MMSI, curY, "MMSI");
-    display->drawString(x + COL_CH,   curY, "Ch");
-    display->drawString(x + COL_AGE,  curY, "s ago");
-    curY += 12;
-    display->drawHorizontalLine(x, curY, W);
-    curY += 2;
-
     // Rows — most recent first
-    uint32_t now_ms = (uint32_t)millis();
     int shown = 0;
     for (int i = (int)vessels.size() - 1; i >= 0 && curY + ROW_H <= y + H; i--) {
         const AISVesselInfo &v = vessels[i];
 
-        // Highlight selected row (simple alternating for readability)
+        // Alternating row highlight
         if (shown % 2 == 0) {
             display->setColor(OLEDDISPLAY_COLOR::WHITE);
             display->drawRect(x, curY, W, ROW_H);
@@ -75,30 +57,27 @@ void AISRenderer::drawFrame(OLEDDisplay *display, OLEDDisplayUiState * /*state*/
         display->setColor(OLEDDISPLAY_COLOR::WHITE);
         display->setTextAlignment(TEXT_ALIGN_LEFT);
 
-        // MMSI
+        // Line 1: MMSI + RSSI + age
         display->setFont(FONT_MEDIUM);
-        char mmsi_str[12];
-        snprintf(mmsi_str, sizeof(mmsi_str), "%09lu", (unsigned long)v.mmsi);
-        display->drawString(x + COL_MMSI, curY + 2, mmsi_str);
-
-        // Channel
-        display->setFont(FONT_SMALL);
-        display->drawString(x + COL_CH, curY + 8, v.channel ? "B" : "A");
-
-        // Age in seconds
-        uint32_t age_s = (now_ms - v.seenAt_ms) / 1000;
-        char age_str[8];
+        uint32_t age_s = ((uint32_t)millis() - v.seenAt_ms) / 1000;
+        char line1[64];
         if (age_s < 3600)
-            snprintf(age_str, sizeof(age_str), "%lu", (unsigned long)age_s);
+            snprintf(line1, sizeof(line1), "%09lu  %ddBm  %lus", (unsigned long)v.mmsi, v.rssi, (unsigned long)age_s);
         else
-            snprintf(age_str, sizeof(age_str), ">1h");
-        display->drawString(x + COL_AGE, curY + 8, age_str);
+            snprintf(line1, sizeof(line1), "%09lu  %ddBm  >1h", (unsigned long)v.mmsi, v.rssi);
+        display->drawString(x + 4, curY, line1);
 
-        // Message type badge (top-right corner)
+        // Message type badge (top-right)
         char type_str[6];
         snprintf(type_str, sizeof(type_str), "T%u", v.msgType);
         display->setTextAlignment(TEXT_ALIGN_RIGHT);
-        display->drawString(x + W - 4, curY + 2, type_str);
+        display->setFont(FONT_SMALL);
+        display->drawString(x + W - 4, curY + 1, type_str);
+
+        // Line 2: NMEA sentence (truncated to fit)
+        display->setTextAlignment(TEXT_ALIGN_LEFT);
+        display->setFont(FONT_SMALL);
+        display->drawString(x + 4, curY + 15, v.nmea);
 
         curY += ROW_H;
         shown++;
