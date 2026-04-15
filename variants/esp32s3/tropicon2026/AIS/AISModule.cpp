@@ -207,17 +207,52 @@ void aisTask(void *pvParameters)
             AISModule::_decoder.clearMessage();
 
             if (len > 0) {
+                // Read RSSI at decode time (approximate — from FRR latch)
+                uint8_t rssiRaw = 0;
+                Si446x_getModemStatus(nullptr, &rssiRaw, nullptr);
+                int16_t rssiDbm = (rssiRaw / 2) - 134;
+
+                // Output NMEA !AIVDM sentence
+                char channel = (AISModule::_currentChannel == 19) ? 'A' : 'B';
+                uint16_t totalBits = len * 8;
+                uint8_t fillBits = (6 - (totalBits % 6)) % 6;
+                uint16_t numChars = (totalBits + fillBits) / 6;
+
+                char nmea[256];
+                int pos = snprintf(nmea, sizeof(nmea), "!AIVDM,1,1,,%c,", channel);
+
+                // Encode payload: extract bits in transmission order, group into 6-bit NMEA chars
+                // Our decoder stores LSB-first: bit N = (payload[N/8] >> (N%8)) & 1
+                for (uint16_t c = 0; c < numChars && pos < (int)sizeof(nmea) - 10; c++) {
+                    uint8_t val = 0;
+                    for (int b = 0; b < 6; b++) {
+                        uint16_t bitIdx = c * 6 + b;
+                        bool bit = false;
+                        if (bitIdx < totalBits)
+                            bit = (frameBuf[bitIdx / 8] >> (bitIdx % 8)) & 1;
+                        val = (val << 1) | (bit ? 1 : 0);
+                    }
+                    // AIS 6-bit ASCII armor: add 48, if >87 add 8 more
+                    char ch = val + 48;
+                    if (ch > 87)
+                        ch += 8;
+                    nmea[pos++] = ch;
+                }
+
+                pos += snprintf(nmea + pos, sizeof(nmea) - pos, ",%u", fillBits);
+
+                // Compute NMEA checksum (XOR of everything between ! and *)
+                uint8_t cksum = 0;
+                for (int i = 1; i < pos; i++)
+                    cksum ^= nmea[i];
+                snprintf(nmea + pos, sizeof(nmea) - pos, "*%02X", cksum);
+
+                Serial.println(nmea);
+                Serial.printf("[AIS] rssi=%d dBm, %u bytes\n", rssiDbm, len);
+
+                // Extract fields for vessel tracking
                 uint8_t msgType = AISModule::_extractMsgType(frameBuf, len);
                 uint32_t mmsi = AISModule::_extractMMSI(frameBuf, len);
-
-                LOG_INFO("AIS Frame  type=%u  MMSI=%09lu  ch=%c  bytes=%u", msgType, (unsigned long)mmsi,
-                         AISModule::_currentChannel == 19 ? 'A' : 'B', (unsigned)len);
-
-                // Print hex dump of successful frame
-                Serial.printf("[AIS] OK frame (%u bytes): ", len);
-                for (uint8_t i = 0; i < len; i++)
-                    Serial.printf("%02X ", frameBuf[i]);
-                Serial.println();
 
                 AISVesselInfo info{mmsi, msgType, AISModule::_currentChannel, (uint32_t)millis()};
 
