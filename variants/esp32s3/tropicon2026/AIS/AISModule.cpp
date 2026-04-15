@@ -156,8 +156,6 @@ static void applyAISModemConfig()
 // ── Background task ─────────────────────────────────────────────────────────
 void aisTask(void *pvParameters)
 {
-    uint32_t lastDiag = millis();
-
     while (true) {
         // Drain ring buffer → decoder
         while (_bitRingTail != _bitRingHead) {
@@ -169,29 +167,7 @@ void aisTask(void *pvParameters)
             AISModule::_decoder.processBit(bit);
         }
 
-        // Diagnostic: print ISR stats every 5 seconds
-        if (millis() - lastDiag >= 5000) {
-            uint32_t bits = _isrBitCount;
-            uint32_t ones = _isrOneCount;
-            _isrBitCount = 0;
-            _isrOneCount = 0;
-            uint8_t radioState = Si446x_getState();
-            uint8_t modemStat = 0;
-            uint8_t currRssiRaw = 0;
-            int16_t afcOffset = 0;
-            Si446x_getModemStatus(&modemStat, &currRssiRaw, &afcOffset);
-            int16_t rssi = (currRssiRaw / 2) - 134;
-            Serial.printf("[AIS] 5s: %lu bits, %lu%% ones | flags=%lu aborts=%lu crcFail=%lu crcOK=%lu maxLen=%u | st=%u rssi=%d "
-                          "modem=0x%02X afc=%d | ovf=%lu\n",
-                          (unsigned long)bits, bits ? (unsigned long)(ones * 100 / bits) : 0UL,
-                          (unsigned long)AISModule::_decoder.dbgFlags, (unsigned long)AISModule::_decoder.dbgAborts,
-                          (unsigned long)AISModule::_decoder.dbgCrcFail, (unsigned long)AISModule::_decoder.dbgCrcPass,
-                          (unsigned)AISModule::_decoder.dbgMaxLen, radioState, rssi, modemStat, afcOffset,
-                          (unsigned long)_isrOverflows);
-            lastDiag = millis();
-        }
-
-        // Silently consume debug frames to avoid serial flood blocking ring buffer drain
+        // Consume debug frames silently
         if (AISModule::_decoder.dbgAbortReady)
             AISModule::_decoder.dbgAbortReady = false;
         if (AISModule::_decoder.dbgFrameReady)
