@@ -1071,11 +1071,11 @@ void Screen::setFrames(FrameFocus focus)
 #if defined(TROPICON2026)
     fsi.positions.talks = numframes;
     normalFrames[numframes++] = graphics::TalksRenderer::drawFrame;
-    indicatorIcons.push_back(icon_list);
+    indicatorIcons.push_back(icon_nodes);
 #endif
 #if defined(TROPICON2026) && defined(USE_AIS)
     normalFrames[numframes++] = graphics::AISRenderer::drawFrame;
-    indicatorIcons.push_back(icon_list);
+    indicatorIcons.push_back(icon_ship);
 #endif
 
     // If we have a critical fault, show it first
@@ -1209,7 +1209,7 @@ void Screen::setFrames(FrameFocus focus)
             if (m && m == waypointModule)
                 fsi.positions.waypoint = numframes;
 
-            indicatorIcons.push_back(icon_module);
+            indicatorIcons.push_back(icon_thermometer);
             numframes++;
         }
     }

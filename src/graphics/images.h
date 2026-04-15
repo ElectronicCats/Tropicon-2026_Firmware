@@ -223,6 +223,29 @@ const uint8_t icon_module[] PROGMEM = {
     0b00011000  // ░░░██░░░
 };
 
+// ship
+const uint8_t icon_ship[] PROGMEM = {
+    0b00000000,
+    0b00001000,
+    0b00011100,
+    0b00111110,
+    0b00001000,
+    0b11111111,
+    0b00111100,
+    0b00000000
+};
+
+const uint8_t icon_thermometer[] PROGMEM = {
+    0b00011000, // Fila 1
+    0b00011000, // Fila 2 - con marca derecha e izquierda
+    0b00011000, // Fila 3
+    0b00011000, // Fila 4 - con marca derecha e izquierda
+    0b00011000, // Fila 5
+    0b00111100, // Fila 6 - con marca derecha e izquierda
+    0b00111100, // Fila 7 - bulbo
+    0b00011000  // Fila 8
+};
+
 #define mute_symbol_width 8
 #define mute_symbol_height 8
 const uint8_t mute_symbol[] PROGMEM = {
