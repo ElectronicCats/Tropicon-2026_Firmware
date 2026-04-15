@@ -77,10 +77,13 @@ void TalksRenderer::drawTalkList(OLEDDisplay *display, OLEDDisplayUiState *state
         display->drawString(x + 4, itemY + 2, talk.time.c_str());
         
         display->setFont(FONT_MEDIUM);
-        // Truncate title if too long
         String title = talk.title.c_str();
         if (display->getStringWidth(title) > display->getWidth() - 10) {
-            title = title.substring(0, 20) + "...";
+            while (title.length() > 1 &&
+                   display->getStringWidth(title + "...") > display->getWidth() - 10) {
+                title = title.substring(0, title.length() - 1);
+            }
+            title = title + "...";
         }
         display->drawString(x + 4, itemY + 12, title);
         
@@ -110,25 +113,56 @@ void TalksRenderer::drawTalkDetail(OLEDDisplay *display, OLEDDisplayUiState *sta
     int idx = talkIndices[::talksModule->currentTalkIndex];
     const auto& talk = ::talksModule->getTalks()[idx];
 
-    // ── Image area constants ─────────────────────────────────────────────────
-    // Reserve y+48 … y+189 (142 px tall) for the speaker image.
-    // The OLEDDisplay buffer stays 0 (black) there so display() never overwrites
-    // the PNG that TFTDisplay draws directly onto the TFT each changed frame.
-    const int IMG_TOP    = y + 48;
-    const int IMG_HEIGHT = 142;  // fits 130 px tall portrait + small margin
-    const int IMG_BOTTOM = IMG_TOP + IMG_HEIGHT;
-    const int IMG_CENTER_X = x + display->getWidth() / 2;  // 71 px
-
     // ── Header ───────────────────────────────────────────────────────────────
+    // The title may wrap to a second line; yOff tracks extra vertical space used.
     display->setTextAlignment(TEXT_ALIGN_LEFT);
-
     display->setFont(FONT_MEDIUM);
-    display->drawString(x + 4, y + 4, talk.title.c_str());
+
+    String titleStr  = talk.title.c_str();
+    int    titleMaxW = display->getWidth() - 8;  // 4 px margin each side
+    int    yOff      = 0;  // extra offset when title needs 2 lines
+
+    if (display->getStringWidth(titleStr) <= titleMaxW) {
+        display->drawString(x + 4, y + 4, titleStr);
+    } else {
+        // Word-wrap: build the longest line 1 that fits
+        String line1 = titleStr;
+        while (line1.length() > 1 && display->getStringWidth(line1) > titleMaxW) {
+            int sp = line1.lastIndexOf(' ');
+            if (sp > 0) line1 = line1.substring(0, sp);
+            else        line1 = line1.substring(0, line1.length() - 1);
+        }
+        String line2 = titleStr.substring(line1.length() + 1);
+        // Truncate line2 with "..." if it still overflows
+        if (display->getStringWidth(line2) > titleMaxW) {
+            while (line2.length() > 1 &&
+                   display->getStringWidth(line2 + "...") > titleMaxW) {
+                int sp = line2.lastIndexOf(' ');
+                if (sp > 0) line2 = line2.substring(0, sp);
+                else        line2 = line2.substring(0, line2.length() - 1);
+            }
+            line2 = line2 + "...";
+        }
+        display->drawString(x + 4, y + 4,  line1);
+        display->drawString(x + 4, y + 17, line2);
+        yOff = 14;  // push the rest of the header + image down 14 px
+    }
 
     display->setFont(FONT_SMALL);
-    display->drawString(x + 4, y + 20, talk.speaker.c_str());
-    display->drawString(x + 4, y + 32, (talk.time + " @ " + talk.stage).c_str());
-    display->drawHorizontalLine(x, y + 44, display->getWidth());
+    display->drawString(x + 4, y + 20 + yOff, talk.speaker.c_str());
+    display->drawString(x + 4, y + 32 + yOff, (talk.time + " @ " + talk.stage).c_str());
+    display->drawHorizontalLine(x, y + 44 + yOff, display->getWidth());
+
+    // ── Image area constants ─────────────────────────────────────────────────
+    // Reserve space below the header for the speaker image.
+    // yOff shifts the image down when the title used 2 lines; IMG_HEIGHT shrinks
+    // by the same amount so IMG_BOTTOM (and the description area) stays fixed.
+    // The OLEDDisplay buffer stays 0 (black) there so display() never overwrites
+    // the PNG that TFTDisplay draws directly onto the TFT each changed frame.
+    int IMG_TOP    = y + 48 + yOff;
+    int IMG_HEIGHT = 142  - yOff;  // fits 130 px tall portrait + small margin
+    int IMG_BOTTOM = IMG_TOP + IMG_HEIGHT;
+    const int IMG_CENTER_X = x + display->getWidth() / 2;  // 71 px
 
     // ── Speaker image ────────────────────────────────────────────────────────
     // Request PNG overlay; TFTDisplay handles decode, cache and blit.
