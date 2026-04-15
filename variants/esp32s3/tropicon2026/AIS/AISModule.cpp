@@ -221,15 +221,16 @@ void aisTask(void *pvParameters)
                 char nmea[256];
                 int pos = snprintf(nmea, sizeof(nmea), "!AIVDM,1,1,,%c,", channel);
 
-                // Encode payload: extract bits in transmission order, group into 6-bit NMEA chars
-                // Our decoder stores LSB-first: bit N = (payload[N/8] >> (N%8)) & 1
+                // Encode payload: extract bits in AIS standard order, group into 6-bit NMEA chars
+                // HDLC sends bytes LSB-first, so wire bit 0 = byte LSB = AIS bit 7.
+                // AIS bit N is stored at byte[N/8] bit (7 - N%8) (MSB-first within each byte).
                 for (uint16_t c = 0; c < numChars && pos < (int)sizeof(nmea) - 10; c++) {
                     uint8_t val = 0;
                     for (int b = 0; b < 6; b++) {
                         uint16_t bitIdx = c * 6 + b;
                         bool bit = false;
                         if (bitIdx < totalBits)
-                            bit = (frameBuf[bitIdx / 8] >> (bitIdx % 8)) & 1;
+                            bit = (frameBuf[bitIdx / 8] >> (7 - (bitIdx % 8))) & 1;
                         val = (val << 1) | (bit ? 1 : 0);
                     }
                     // AIS 6-bit ASCII armor: add 48, if >87 add 8 more
@@ -401,37 +402,24 @@ std::vector<AISVesselInfo> AISModule::getRecentVessels()
 }
 
 // ── AIS field extraction ────────────────────────────────────────────────────
+// HDLC LSB-first means: byte[0] MSB = AIS bit 0, byte[0] LSB = AIS bit 7
+// Type = AIS bits 0-5 = byte[0] bits 7-2
 uint8_t AISModule::_extractMsgType(const uint8_t *payload, uint8_t len)
 {
     if (len < 1)
         return 0;
-    uint8_t b = payload[0] & 0x3F;
-    uint8_t r = 0;
-    for (int i = 0; i < 6; i++)
-        r |= ((b >> i) & 1) << (5 - i);
-    return r;
+    return (payload[0] >> 2) & 0x3F;
 }
 
+// MMSI = AIS bits 8-37 = byte[1] full + byte[2] full + byte[3] full + byte[4] bits 7-2
 uint32_t AISModule::_extractMMSI(const uint8_t *payload, uint8_t len)
 {
     if (len < 5)
         return 0;
-    auto rev8 = [](uint8_t b) -> uint8_t {
-        b = (b & 0xF0u) >> 4 | (b & 0x0Fu) << 4;
-        b = (b & 0xCCu) >> 2 | (b & 0x33u) << 2;
-        b = (b & 0xAAu) >> 1 | (b & 0x55u) << 1;
-        return b;
-    };
-
     uint32_t mmsi = 0;
-    mmsi |= (uint32_t)rev8(payload[1]) << 22;
-    mmsi |= (uint32_t)rev8(payload[2]) << 14;
-    mmsi |= (uint32_t)rev8(payload[3]) << 6;
-    uint8_t b4 = payload[4] & 0x3F;
-    uint8_t r4 = 0;
-    for (int i = 0; i < 6; i++)
-        r4 |= ((b4 >> i) & 1) << (5 - i);
-    mmsi |= r4;
-
-    return mmsi & 0x3FFFFFFF;
+    mmsi |= (uint32_t)payload[1] << 22;
+    mmsi |= (uint32_t)payload[2] << 14;
+    mmsi |= (uint32_t)payload[3] << 6;
+    mmsi |= (uint32_t)(payload[4] >> 2);
+    return mmsi;
 }
