@@ -12,11 +12,9 @@ Firmware personalizado de Meshtastic para el badge del evento **Tropicon 2026**,
 ## Tabla de contenidos
 
 - [Tabla de contenidos](#tabla-de-contenidos)
-- [Set up the Build Environment](#set-up-the-build-environment)
-- [Flasheo del dispositivo](#flasheo-del-dispositivo)
-	- [Paso 1 — Subir el sistema de archivos (SPIFFS/LittleFS)](#paso-1--subir-el-sistema-de-archivos-spiffslittlefs)
-	- [Paso 2 — Subir el firmware](#paso-2--subir-el-firmware)
 - [Primeros pasos](#primeros-pasos)
+- [Personalizar tu nombre en el badge](#personalizar-tu-nombre-en-el-badge)
+	- [Pasos para cambiar el nombre](#pasos-para-cambiar-el-nombre)
 - [Botones y navegación general](#botones-y-navegación-general)
 - [Pantallas del dispositivo](#pantallas-del-dispositivo)
 - [Menú de Acciones (Home Action)](#menú-de-acciones-home-action)
@@ -35,46 +33,22 @@ Firmware personalizado de Meshtastic para el badge del evento **Tropicon 2026**,
 - [Telemetría del Entorno](#telemetría-del-entorno)
 - [Conexión por Bluetooth](#conexión-por-bluetooth)
 	- [Pasos para emparejar](#pasos-para-emparejar)
+- [Set up the Build Environment](#set-up-the-build-environment)
+- [Flasheo del dispositivo](#flasheo-del-dispositivo)
+	- [Paso 1 — Subir el sistema de archivos (SPIFFS/LittleFS)](#paso-1--subir-el-sistema-de-archivos-spiffslittlefs)
+	- [Paso 2 — Subir el firmware](#paso-2--subir-el-firmware)
 - [Estructura del proyecto](#estructura-del-proyecto)
-
----
-
-## Set up the Build Environment
-1. Instalar [Git](https://git-scm.com/install/)
-2. Instalar [Platformio](https://platformio.org/platformio-ide)
-3. Clonar el repositorio
-   ```bash
-   git clone https://github.com/ElectronicCats/Tropicon-2026_Firmware.git
-   ```
-4. Actualiza los submodulos del repositorio
-   ```bash
-   cd Tropicon-2026_Firmware && git submodule update --init
-   ```
-
----
-
-## Flasheo del dispositivo
-
-Para cargar el firmware y los datos en tu badge Tropicon 2026, utiliza PlatformIO. El proceso consta de **dos pasos críticos** que deben ejecutarse en este orden:
-
-### Paso 1 — Subir el sistema de archivos (SPIFFS/LittleFS)
-
-Este paso sube la agenda de pláticas, talleres e imágenes de los ponentes al almacenamiento interno del badge. Sin este paso, el dispositivo mostrará `"No talks found"` en la pantalla de agenda.
-
-```bash
-pio run -e tropicon2026 -t uploadfs
-```
-
-### Paso 2 — Subir el firmware
-
-Una vez que los archivos de datos están en el dispositivo, sube el código principal:
-
-```bash
-pio run -e tropicon2026 -t upload
-```
-
-> [!IMPORTANT]
-> Ambos pasos deben ejecutarse **en ese orden** cada vez que se flashea el dispositivo. Si se omite el Paso 1, el dispositivo arrancará sin los datos de la agenda.
+- [Personalizar y modificar el código](#personalizar-y-modificar-el-código)
+	- [Requisitos previos](#requisitos-previos)
+	- [Cambios comunes y dónde hacerlos](#cambios-comunes-y-dónde-hacerlos)
+		- [Modificar la agenda de pláticas](#modificar-la-agenda-de-pláticas)
+		- [Agregar o cambiar imágenes de ponentes](#agregar-o-cambiar-imágenes-de-ponentes)
+		- [Modificar la lógica de la agenda](#modificar-la-lógica-de-la-agenda)
+		- [Modificar cómo se ve la agenda en pantalla](#modificar-cómo-se-ve-la-agenda-en-pantalla)
+		- [Modificar la pantalla AIS](#modificar-la-pantalla-ais)
+		- [Agregar nuevas opciones al menú](#agregar-nuevas-opciones-al-menú)
+	- [Flujo de trabajo recomendado](#flujo-de-trabajo-recomendado)
+	- [Recursos útiles](#recursos-útiles)
 
 ---
 
@@ -83,12 +57,34 @@ pio run -e tropicon2026 -t upload
 Al encender el badge por primera vez:
 
 1. La pantalla mostrará el logo de Meshtastic y luego la pantalla **Home**.
-2. El nombre del dispositivo (ej. `Tropicon-1234`) aparece en la pantalla Home — anótalo para identificarlo en la app Meshtastic.
-3. Usa los botones **UP** y **DOWN** para navegar entre las distintas pantallas de información.
+2. El nombre del dispositivo (ej. `Meshtastic-1234`) aparece en la pantalla Home — anótalo para identificarlo en la app Meshtastic.
+3. Usa los botones **RIGHT** y **LEFT** para navegar entre las distintas pantallas de información.
 4. Para abrir opciones y menús en cualquier pantalla, mantén presionado el botón **UP** por ~1 segundo.
 
 > [!NOTE]
 > El badge funciona de forma autónoma. No necesitas conectarlo a un teléfono para ver la agenda, los mensajes LoRa o las métricas del entorno.
+
+---
+
+## Personalizar tu nombre en el badge
+
+Por defecto, el badge muestra un nombre generado automáticamente (ej. `Meshtastic-1234`) en la pantalla **Home** y en los mensajes que envías por la malla LoRa. Puedes cambiarlo a tu nombre o apodo desde la app Meshtastic.
+
+### Pasos para cambiar el nombre
+
+1. Conecta tu badge a la app **Meshtastic** vía Bluetooth ([ver instrucciones](#conexión-por-bluetooth)).
+2. En la app, abre la sección de configuración de tu nodo. En la mayoría de las versiones se accede desde el ícono de llave o engrane junto al nombre del dispositivo.
+3. Dentro de la configuración, busca la sección de `Configuración del Dispositivo` > `Usuario` o `User`.
+4. Busca los campos:
+   - **Long Name** — nombre completo que aparece en la pantalla Home del badge y en los mensajes.
+   - **Short Name** — abreviatura de 1 a 4 caracteres usada en mapas y listas de nodos.
+5. Escribe tu nombre o apodo en **Long Name** y una abreviatura en **Short Name**.
+6. Guarda los cambios desde la app.
+
+El badge recibe la actualización vía Bluetooth y muestra el nuevo nombre en la pantalla **Home** de inmediato, sin necesidad de reiniciarlo.
+
+> [!TIP]
+> Elige un nombre corto pero reconocible — otros asistentes al evento verán ese nombre cuando reciban tus mensajes en la malla LoRa o cuando tu badge aparezca en la lista de nodos de sus dispositivos.
 
 ---
 
@@ -304,6 +300,45 @@ Una vez conectado, la app permite enviar mensajes, ver nodos en el mapa, configu
 
 ---
 
+## Set up the Build Environment
+1. Instalar [Git](https://git-scm.com/install/)
+2. Instalar [Platformio](https://platformio.org/platformio-ide)
+3. Clonar el repositorio
+   ```bash
+   git clone https://github.com/ElectronicCats/Tropicon-2026_Firmware.git
+   ```
+4. Actualiza los submodulos del repositorio
+   ```bash
+   cd Tropicon-2026_Firmware && git submodule update --init
+   ```
+
+---
+
+## Flasheo del dispositivo
+
+Para cargar el firmware y los datos en tu badge Tropicon 2026, utiliza PlatformIO. El proceso consta de **dos pasos críticos** que deben ejecutarse en este orden:
+
+### Paso 1 — Subir el sistema de archivos (SPIFFS/LittleFS)
+
+Este paso sube la agenda de pláticas, talleres e imágenes de los ponentes al almacenamiento interno del badge. Sin este paso, el dispositivo mostrará `"No talks found"` en la pantalla de agenda.
+
+```bash
+pio run -e tropicon2026 -t uploadfs
+```
+
+### Paso 2 — Subir el firmware
+
+Una vez que los archivos de datos están en el dispositivo, sube el código principal:
+
+```bash
+pio run -e tropicon2026 -t upload
+```
+
+> [!IMPORTANT]
+> Ambos pasos deben ejecutarse **en ese orden** cada vez que se flashea el dispositivo. Si se omite el Paso 1, el dispositivo arrancará sin los datos de la agenda.
+
+---
+
 ## Estructura del proyecto
 
 ```
@@ -322,3 +357,78 @@ src/
         ├── MessageRenderer.cpp # Renderizado de mensajes con burbujas
         └── MenuHandler.cpp     # Integración con los menús de Meshtastic
 ```
+
+---
+
+## Personalizar y modificar el código
+
+El firmware está basado en [Meshtastic](https://meshtastic.org/) con extensiones propias de Electronic Cats. Si después del evento quieres explorar, adaptar o agregar funcionalidades a tu badge, esta guía te da el punto de partida.
+
+### Requisitos previos
+
+- Tener el entorno de compilación configurado ([ver Set up the Build Environment](#set-up-the-build-environment)).
+- Conocimientos básicos de C++ y Arduino/ESP32 son útiles, aunque no indispensables para cambios sencillos.
+- Familiarizarse con PlatformIO y el archivo `platformio.ini` del repositorio.
+
+### Cambios comunes y dónde hacerlos
+
+#### Modificar la agenda de pláticas
+
+Los datos de la agenda no requieren recompilar el firmware — están en archivos JSON dentro de `data/`:
+
+| Archivo | Qué controla |
+|---------|--------------|
+| `data/schedule.json` | Pláticas de Track 1 y Track Villas |
+| `data/talleres.json` | Talleres de los 4 salones |
+
+Edita los archivos JSON con tu editor favorito y vuelve a subir solo el sistema de archivos:
+
+```bash
+pio run -e tropicon2026 -t uploadfs
+```
+
+No es necesario recompilar ni re-flashear el firmware completo.
+
+#### Agregar o cambiar imágenes de ponentes
+
+Las imágenes se encuentran en `data/img/` en formato `.bmp`. Reemplaza o agrega archivos con el mismo nombre que referencia el campo `"ImagenTrack1"` o `"ImagenVillas"` en el JSON, y vuelve a correr `uploadfs`.
+
+#### Modificar la lógica de la agenda
+
+El módulo central está en [src/modules/TalksModule.cpp](src/modules/TalksModule.cpp). Ahí se controla:
+- Carga de los JSON desde la flash.
+- Lógica de navegación (días, stages, pláticas).
+- Persistencia de marcadores de interés (`/talks_int.dat`).
+- Envío de notificaciones BLE 10 minutos antes de una plática marcada como "Asistir".
+
+#### Modificar cómo se ve la agenda en pantalla
+
+El renderizado visual está en [src/graphics/draw/TalksRenderer.cpp](src/graphics/draw/TalksRenderer.cpp): fuentes, posiciones, íconos y el diseño de la vista lista y detalle.
+
+#### Modificar la pantalla AIS
+
+El renderizado del monitor de embarcaciones está en [src/graphics/draw/AISRenderer.cpp](src/graphics/draw/AISRenderer.cpp). La lógica de recepción y decodificación de tramas AIS está en `src/modules/AIS/`.
+
+#### Agregar nuevas opciones al menú
+
+Los menús emergentes (banners) se definen en [src/graphics/draw/MenuHandler.cpp](src/graphics/draw/MenuHandler.cpp). Busca la función `homeBaseMenu()` para el menú principal o `messageResponseMenu()` para el menú de mensajes y agrega entradas nuevas siguiendo el mismo patrón `enum` + `optionsArray`.
+
+### Flujo de trabajo recomendado
+
+```
+1. Editar el archivo fuente correspondiente
+2. pio run -e tropicon2026          # Compilar (verifica errores)
+3. pio run -e tropicon2026 -t uploadfs   # Si cambiaste data/
+4. pio run -e tropicon2026 -t upload    # Subir firmware al badge
+```
+
+> [!TIP]
+> Si solo modificaste archivos en `data/` (JSON o imágenes), no necesitas recompilar el firmware — basta con el paso `uploadfs`.
+
+### Recursos útiles
+
+- [Documentación oficial de Meshtastic](https://meshtastic.org/docs/) — arquitectura, módulos, protocolo LoRa y API.
+- [Repositorio base de Meshtastic firmware](https://github.com/meshtastic/firmware) — código fuente upstream del que se deriva este firmware.
+- [Documentación de PlatformIO](https://docs.platformio.org/) — comandos de compilación, ambientes y gestión de librerías.
+- [Foro de la comunidad Meshtastic](https://meshtastic.discourse.group/) — preguntas, proyectos y soporte comunitario.
+- [Electronic Cats en GitHub](https://github.com/ElectronicCats) — otros proyectos de hardware y firmware de Electronic Cats.
