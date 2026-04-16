@@ -304,6 +304,9 @@ int32_t EnvironmentTelemetryModule::runOnce()
                 result = rak9154Sensor.runOnce();
 #endif
 #endif
+            // Force an immediate local/phone update so the screen shows data right away
+            if (result != UINT32_MAX)
+                sendTelemetry(NODENUM_BROADCAST, true);
         }
         // it's possible to have this module enabled, only for displaying values on the screen.
         // therefore, we should only enable the sensor loop if measurement is also enabled

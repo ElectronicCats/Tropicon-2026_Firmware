@@ -33,7 +33,7 @@ class EnvironmentTelemetryModule : private concurrency::OSThread,
     {
         lastMeasurementPacket = nullptr;
         nodeStatusObserver.observe(&nodeStatus->onNewStatus);
-        setIntervalFromNow(10 * 1000);
+        setIntervalFromNow(1 * 1000);
     }
     virtual bool wantUIFrame() override;
 #if !HAS_SCREEN
