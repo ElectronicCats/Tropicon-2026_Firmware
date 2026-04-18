@@ -30,9 +30,20 @@ void AISRenderer::drawFrame(OLEDDisplay *display, OLEDDisplayUiState * /*state*/
     snprintf(header, sizeof(header), "AIS  ch %c  %lu frm", (channel == 21) ? 'B' : 'A', (unsigned long)frames);
     display->drawString(x + W / 2, y + 1, header);
 
-    // ── Ship icon overlay (top-right) ───────────────────────────────────────
-    // Similar to TalksRenderer, we use the BMP overlay path.
-    TFTDisplay::setPngOverlay("data/img/ship-solid-full_35x35.bmp", x + W / 2, y + 140, W, 35, false);
+    // ── Ship icon overlay ───────────────────────────────────────────────────
+    // Only draw when the frame is fully settled (x==0, y==0).  During
+    // transitions x/y change every tick, which would re-read the BMP from
+    // flash on every animation frame and write past the display bounds.
+    if (x == 0 && y == 0) {
+        // Position the icon so it stays within the display (H = 142 after rotation).
+        // Icon area: H - 40 gives a safe top-Y with 5 px margin at the bottom.
+        int16_t iconTopY = H - 40;
+        TFTDisplay::setPngOverlay("data/img/ship-solid-full_35x35.bmp", W / 2, iconTopY, W, 35, false);
+    } else {
+        // Transitioning — clear any stale overlay so it doesn't persist
+        // at the old position while the frame slides.
+        TFTDisplay::clearPngOverlay();
+    }
 
     display->setColor(OLEDDISPLAY_COLOR::WHITE);
 

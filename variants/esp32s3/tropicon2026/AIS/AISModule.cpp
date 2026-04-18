@@ -1,5 +1,6 @@
 #include "AISModule.h"
 #include "configuration.h"
+#include "soc/gpio_struct.h" // Direct GPIO register access for IRAM-safe ISR
 #include <Arduino.h>
 
 // ── Static members ──────────────────────────────────────────────────────────
@@ -7,10 +8,9 @@ AISDecoder AISModule::_decoder;
 uint8_t AISModule::_rxDataPin = 17;
 volatile uint32_t AISModule::_frameCount = 0;
 volatile uint8_t AISModule::_currentChannel = 19; // MAIANA ch19 = AIS-A 161.975 MHz
-std::vector<AISVesselInfo> AISModule::_recentVessels;
+AISVesselInfo AISModule::_vesselSlots[AIS_MAX_VESSELS] = {};
+uint8_t AISModule::_vesselCount = 0;
 SemaphoreHandle_t AISModule::_vesselMutex = nullptr;
-
-static constexpr uint8_t AIS_MAX_VESSELS = 8;
 
 // ── Ring buffer for ISR → task bit transfer ─────────────────────────────────
 static constexpr uint16_t BIT_RING_SIZE = 16384;
@@ -25,7 +25,13 @@ static volatile uint32_t _isrOverflows = 0;
 // ── RX_DATA_CLK ISR — stores bits in ring buffer ───────────────────────────
 void IRAM_ATTR AISModule::handleRxBit()
 {
-    bool bit = digitalRead(_rxDataPin);
+    // Direct GPIO register read — digitalRead() is NOT in IRAM on ESP32 and
+    // will crash with IllegalInstruction when flash is busy (BMP read, OTA, etc.)
+    bool bit;
+    if (_rxDataPin < 32)
+        bit = (GPIO.in >> _rxDataPin) & 1;
+    else
+        bit = (GPIO.in1.val >> (_rxDataPin - 32)) & 1;
     _isrBitCount++;
     if (bit)
         _isrOneCount++;
@@ -156,7 +162,25 @@ static void applyAISModemConfig()
 // ── Background task ─────────────────────────────────────────────────────────
 void aisTask(void *pvParameters)
 {
+    // Radio health watchdog: if no bits arrive for 30 s the radio is likely
+    // stuck.  Check every 30 s and attempt a full reset if needed.
+    static constexpr uint32_t HEALTH_CHECK_MS = 30000;
+    uint32_t lastHealthCheckMs = millis();
+    uint32_t lastBitSnapshot = _isrBitCount;
+
     while (true) {
+        // ── Periodic radio health check ─────────────────────────────────
+        if (millis() - lastHealthCheckMs >= HEALTH_CHECK_MS) {
+            uint32_t currentBits = _isrBitCount;
+            if (currentBits == lastBitSnapshot) {
+                // No new bits in 30 s — clock line is dead, radio may be stuck
+                LOG_WARN("AIS: No bits received in %lu ms, checking radio...", HEALTH_CHECK_MS);
+                AISModule::checkRadioHealth();
+            }
+            lastBitSnapshot = _isrBitCount;
+            lastHealthCheckMs = millis();
+        }
+
         // Drain ring buffer → decoder
         while (_bitRingTail != _bitRingHead) {
             uint16_t tail = _bitRingTail;
@@ -176,7 +200,7 @@ void aisTask(void *pvParameters)
         // Check for decoded frames
         if (AISModule::_decoder.hasMessage()) {
             uint8_t len = AISModule::_decoder.getMessageLen();
-            uint8_t frameBuf[AIS_MAX_MSG_LEN];
+            static uint8_t frameBuf[AIS_MAX_MSG_LEN]; // static — saves 168 bytes of stack
             if (len > 0 && len <= AIS_MAX_MSG_LEN) {
                 memcpy(frameBuf, AISModule::_decoder.getMessagePtr(), len);
             }
@@ -194,7 +218,7 @@ void aisTask(void *pvParameters)
                 uint8_t fillBits = (6 - (totalBits % 6)) % 6;
                 uint16_t numChars = (totalBits + fillBits) / 6;
 
-                char nmea[256];
+                static char nmea[256]; // static — saves 256 bytes of stack
                 int pos = snprintf(nmea, sizeof(nmea), "!AIVDM,1,1,,%c,", channel);
 
                 // Encode payload: extract bits in AIS standard order, group into 6-bit NMEA chars
@@ -242,17 +266,22 @@ void aisTask(void *pvParameters)
 
                 if (xSemaphoreTake(AISModule::_vesselMutex, portMAX_DELAY) == pdTRUE) {
                     bool updated = false;
-                    for (auto &v : AISModule::_recentVessels) {
-                        if (v.mmsi == mmsi) {
-                            v = info;
+                    for (uint8_t i = 0; i < AISModule::_vesselCount; i++) {
+                        if (AISModule::_vesselSlots[i].mmsi == mmsi) {
+                            AISModule::_vesselSlots[i] = info;
                             updated = true;
                             break;
                         }
                     }
                     if (!updated) {
-                        if (AISModule::_recentVessels.size() >= AIS_MAX_VESSELS)
-                            AISModule::_recentVessels.erase(AISModule::_recentVessels.begin());
-                        AISModule::_recentVessels.push_back(info);
+                        if (AISModule::_vesselCount < AIS_MAX_VESSELS) {
+                            AISModule::_vesselSlots[AISModule::_vesselCount++] = info;
+                        } else {
+                            // Circular overwrite: drop oldest (shift left by 1)
+                            memmove(&AISModule::_vesselSlots[0], &AISModule::_vesselSlots[1],
+                                    sizeof(AISVesselInfo) * (AIS_MAX_VESSELS - 1));
+                            AISModule::_vesselSlots[AIS_MAX_VESSELS - 1] = info;
+                        }
                     }
                     xSemaphoreGive(AISModule::_vesselMutex);
                 }
@@ -271,12 +300,17 @@ void AISModule::setup()
     MeshModule::setup();
     _vesselMutex = xSemaphoreCreateMutex();
 
-    // Init SI4463 with soft-SPI pins — loads Pass 1 config + firmware patch
+    // Init SI4463 with soft-SPI pins — loads Pass 1 config + firmware patch.
+    // Pass -1 for IRQ: AIS mode uses raw GPIO bit-level RX, not the Si446x
+    // packet handler.  With a real IRQ pin Si446x_init() would attach
+    // Si446x_SERVICE() as a GPIO ISR — that function does full SPI I/O with
+    // busy-wait loops, which causes WDT resets / panics when called from
+    // interrupt context on ESP32.
     static uint8_t softSpiPins[3];
     softSpiPins[0] = _sck;
     softSpiPins[1] = _miso;
     softSpiPins[2] = _mosi;
-    Si446x_init(_cs, _sdn, _irq, softSpiPins);
+    Si446x_init(_cs, _sdn, -1, softSpiPins);
 
     // Wake radio
     Si446x_RX(0);
@@ -355,7 +389,7 @@ void AISModule::setup()
 
     LOG_INFO("AIS: RX on pin%d, CLK pin%d, ch19 (161.975 MHz)", (int)_rxDataPin, _rxClkPin);
 
-    xTaskCreate(aisTask, "AisTask", 4096, this, 1, nullptr);
+    xTaskCreate(aisTask, "AisTask", 8192, this, 1, nullptr);
 }
 
 // ── switchToChannel() ───────────────────────────────────────────────────────
@@ -378,10 +412,74 @@ std::vector<AISVesselInfo> AISModule::getRecentVessels()
 {
     std::vector<AISVesselInfo> copy;
     if (_vesselMutex && xSemaphoreTake(_vesselMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
-        copy = _recentVessels;
+        copy.reserve(_vesselCount); // single allocation, no realloc churn
+        for (uint8_t i = 0; i < _vesselCount; i++)
+            copy.push_back(_vesselSlots[i]);
         xSemaphoreGive(_vesselMutex);
     }
     return copy;
+}
+
+// ── Runtime radio health check ──────────────────────────────────────────────
+// Verifies the SI4463 is responsive by reading PART_INFO.  If it fails,
+// performs a full hardware reset (SDN toggle) and re-applies the AIS config.
+// Returns true if the radio is healthy after the check.
+bool AISModule::checkRadioHealth()
+{
+    si446x_info_t info;
+    Si446x_getInfo(&info);
+    if (info.part == 0x4463)
+        return true;
+
+    LOG_WARN("AIS: Radio unresponsive (part=0x%04X), resetting...", info.part);
+
+    // Detach the bit-clock ISR during reset to avoid garbage interrupts.
+    // RX_DATA_CLK is SI4463_GPIO2 = IO05 (defined in variant.h).
+    detachInterrupt(digitalPinToInterrupt(SI4463_GPIO2));
+
+    // Hardware reset via SDN
+    digitalWrite(SI4463_SDN, HIGH);
+    vTaskDelay(pdMS_TO_TICKS(50));
+    digitalWrite(SI4463_SDN, LOW);
+    vTaskDelay(pdMS_TO_TICKS(50));
+
+    // Re-init (Pass 1 config + patch)
+    static uint8_t softSpiPins[3] = {SI4463_SCK, SI4463_MISO, SI4463_MOSI};
+    Si446x_init(SI4463_CS, SI4463_SDN, -1, softSpiPins);
+    Si446x_RX(0);
+
+    // Verify
+    Si446x_getInfo(&info);
+    if (info.part != 0x4463) {
+        LOG_ERROR("AIS: Radio recovery FAILED (part=0x%04X)", info.part);
+        return false;
+    }
+
+    // Re-apply GPIO config
+    uint8_t gpioCmd[] = {0x13, 0x14, 0x00, 0x11, 0x14, 0x1B, 0x00, 0x60};
+    Si446x_sendCmd(gpioCmd, sizeof(gpioCmd));
+
+    // Re-apply Pass 2 modem config
+    applyAISModemConfig();
+
+    // Re-apply frequency offset
+    const uint32_t nominalFrac = 0x0CCCCC;
+    const int32_t fracOffset = -1500;
+    uint32_t frac = nominalFrac + fracOffset;
+    uint8_t fracCmd[] = {0x11, 0x40, 0x03, 0x01, (uint8_t)(frac >> 16), (uint8_t)(frac >> 8), (uint8_t)frac};
+    Si446x_sendCmd(fracCmd, sizeof(fracCmd));
+
+    // Enter RX on current channel
+    {
+        uint8_t cmd[] = {0x32, _currentChannel, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        Si446x_sendCmd(cmd, sizeof(cmd));
+    }
+
+    // Re-attach bit-clock ISR
+    attachInterrupt(digitalPinToInterrupt(SI4463_GPIO2), &AISModule::handleRxBit, RISING);
+
+    LOG_INFO("AIS: Radio recovered successfully");
+    return true;
 }
 
 // ── AIS field extraction ────────────────────────────────────────────────────

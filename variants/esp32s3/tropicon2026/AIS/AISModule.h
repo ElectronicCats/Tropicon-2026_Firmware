@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+static constexpr uint8_t AIS_MAX_VESSELS = 8;
+
 struct AISVesselInfo {
     uint32_t mmsi;
     uint8_t msgType;
@@ -45,11 +47,18 @@ class AISModule : public MeshModule
 
     static volatile uint32_t _frameCount;
     static volatile uint8_t _currentChannel;
-    static std::vector<AISVesselInfo> _recentVessels;
+    // Fixed-size vessel storage — no heap allocation, no fragmentation.
+    // Older entries are overwritten in a circular fashion.
+    static AISVesselInfo _vesselSlots[AIS_MAX_VESSELS];
+    static uint8_t _vesselCount; // number of valid entries (0..AIS_MAX_VESSELS)
     static SemaphoreHandle_t _vesselMutex;
 
     static uint8_t _extractMsgType(const uint8_t *payload, uint8_t len);
     static uint32_t _extractMMSI(const uint8_t *payload, uint8_t len);
+
+    // Runtime radio health check — called periodically from aisTask.
+    // Returns true if the radio is alive; attempts a full reset+reinit if not.
+    static bool checkRadioHealth();
 
     friend void aisTask(void *pvParameters);
 };
