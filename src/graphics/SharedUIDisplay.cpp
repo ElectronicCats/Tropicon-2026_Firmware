@@ -304,7 +304,7 @@ void drawCommonHeader(OLEDDisplay *display, int16_t x, int16_t y, const char *ti
                 }
                 display->drawXbm(iconX, iconY, mail_width, mail_height, mail);
             }
-        } else if (externalNotificationModule->getMute()) {
+        } else if (externalNotificationModule && externalNotificationModule->getMute()) {
             if (currentResolution == ScreenResolution::High) {
                 int iconX = iconRightEdge - mute_symbol_big_width;
                 int iconY = textY + (FONT_HEIGHT_SMALL - mute_symbol_big_height) / 2;
@@ -381,7 +381,7 @@ void drawCommonHeader(OLEDDisplay *display, int16_t x, int16_t y, const char *ti
                 int iconY = textY + (FONT_HEIGHT_SMALL - mail_height) / 2;
                 display->drawXbm(iconX, iconY, mail_width, mail_height, mail);
             }
-        } else if (externalNotificationModule->getMute()) {
+        } else if (externalNotificationModule && externalNotificationModule->getMute()) {
             if (currentResolution == ScreenResolution::High) {
                 int iconX = iconRightEdge - mute_symbol_big_width;
                 int iconY = textY + (FONT_HEIGHT_SMALL - mute_symbol_big_height) / 2;
@@ -426,7 +426,7 @@ const int *getTextPositions(OLEDDisplay *display)
 // *************************
 void drawCommonFooter(OLEDDisplay *display, int16_t x, int16_t y)
 {
-    if (!isAPIConnected(service->api_state))
+    if (!service || !isAPIConnected(service->api_state))
         return;
 
     const int scale = (currentResolution == ScreenResolution::High) ? 2 : 1;

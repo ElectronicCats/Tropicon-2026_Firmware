@@ -823,7 +823,8 @@ void UIRenderer::drawDeviceFocused(OLEDDisplay *display, OLEDDisplayUiState *sta
     // === Third Row: Channel Utilization Bluetooth Off (Only If Actually Off) ===
     const char *chUtil = "ChUtil:";
     char chUtilPercentage[10];
-    snprintf(chUtilPercentage, sizeof(chUtilPercentage), "%2.0f%%", airTime->channelUtilizationPercent());
+    const float chUtilPct = airTime ? airTime->channelUtilizationPercent() : 0.0f;
+    snprintf(chUtilPercentage, sizeof(chUtilPercentage), "%2.0f%%", chUtilPct);
 
     int chUtil_x = (currentResolution == ScreenResolution::High) ? display->getStringWidth(chUtil) + 10
                                                                  : display->getStringWidth(chUtil) + 5;
@@ -842,7 +843,7 @@ void UIRenderer::drawDeviceFocused(OLEDDisplay *display, OLEDDisplayUiState *sta
     if (!config.bluetooth.enabled) {
         extraoffset = (currentResolution == ScreenResolution::High) ? 6 : 1;
     }
-    int chutil_percent = airTime->channelUtilizationPercent();
+    int chutil_percent = (int)chUtilPct;
 
     int centerofscreen = SCREEN_WIDTH / 2;
     int total_line_content_width = (chUtil_x + chutil_bar_width + display->getStringWidth(chUtilPercentage) + extraoffset) / 2;

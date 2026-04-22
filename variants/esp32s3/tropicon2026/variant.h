@@ -59,8 +59,8 @@
 //   SDA         │ SDA         │ IO11         │ MOSI (serial data in)
 //   SCL         │ SCL         │ IO12         │ SCLK (serial clock)
 //   D/CX        │ RS          │ IO09         │ Data/Command select
-//   CSX         │ CS1         │ IO10         │ Chip Select (active low)
-//   RESX        │ RSTB        │ IO21         │ Reset (active low)
+//   RESX        │ RSTB        │ IO10         │ Reset (active low)
+//   CSX         │ CS1         │ IO21         │ Chip Select (active low)
 //   TE          │ TE          │ IO13         │ Tearing Effect (frame sync)
 //   LED         │ LED         │ IO02         │ Backlight (PWM output)
 //
@@ -74,8 +74,8 @@
 
 // SPI pins for display
 #define TFT_DC 9   // IO09 = D/CX (Data/Command select)
-#define TFT_RST 10 // IO21 = RESX (Reset)
-#define TFT_CS 21  // IO10 = CSX (Chip Select)
+#define TFT_RST 10 // IO10 = RESX (Reset, active low)
+#define TFT_CS 21  // IO21 = CSX  (Chip Select, active low)
 
 // Brightness control
 #define TFT_BL 2 // IO02 = LCD_BRIGHT (PWM output)

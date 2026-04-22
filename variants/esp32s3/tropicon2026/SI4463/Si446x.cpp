@@ -47,7 +47,7 @@ static uint8_t _sw_sck_pin;
 static uint8_t _sw_miso_pin;
 static uint8_t _sw_mosi_pin;
 
-static IRAM_ATTR uint8_t softSpiTransfer(uint8_t data)
+static uint8_t softSpiTransfer(uint8_t data)
 {
     uint8_t result = 0;
     for (int8_t bit = 7; bit >= 0; bit--) {
